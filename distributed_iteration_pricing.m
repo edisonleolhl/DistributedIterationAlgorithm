@@ -22,17 +22,17 @@ function main()
         revenue = 0;
         % 1. ISP更新定价策略
         for i=1:length(BW)
-            PRICE(i) = PRICE(i) + max(0, price_step*cal_change_rate_p(i));
+            PRICE(i) = max(0, PRICE(i) + price_step*cal_change_rate_p(i));
         end
         % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
         for i=1:length(BW)
             utility = cal_utility(i, BW(i), PRICE(i));
             next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
             next_utility = cal_utility(i, next_bw, PRICE(i));
-            k = 1;
-            %for k=1:MAX_ITER
-            fprintf('-------%3d epoch----------\n',k);
-            while abs(utility - next_utility) > 10^(-3)
+            %k = 1;
+            for k=1:MAX_ITER
+            %while abs(utility - next_utility) > 10^(-4)
+                %fprintf('-------%3d epoch----------\n',k);
                 BW(i) = next_bw;
                 if time == 1
                     UTILITY_Epoch_History(i, k) = utility;
@@ -123,13 +123,18 @@ function rb=cal_change_rate_b(i)
     global repu;
     global CAPACITY;
     rb = will(i)*repu*qos(i)/(1+repu*qos(i)*BW(i)) - PRICE(i);
+    % 吞吐量大于网络容量，所以减少用户的带宽
+    if sum(BW) > CAPACITY
+        rb = -abs(rb);
+    end
 end
 
 function rp=cal_change_rate_p(i)
     global BW;
     global CAPACITY;
     rp = BW(i);
+    % 吞吐量太小，所以减少价格，诱导用户带宽需求增加
     if sum(BW) < CAPACITY / 5
-        rp = -rp;
+        rp = -abs(rp);
     end
 end
