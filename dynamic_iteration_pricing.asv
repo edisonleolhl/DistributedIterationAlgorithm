@@ -1,0 +1,77 @@
+% 先两个用户迭代，然后第100轮第三个用户加入
+addpath distr
+function main()
+    bw_step = 0.01;
+    price_step = 0.01;
+    global repu; repu = 10;
+    global MAX_ITER; MAX_ITER = 200;
+    global CAPACITY; CAPACITY = 10;
+    global NUMBERS; NUMBERS = 3;
+    global will; will = [1.5, 2, 3];
+    global qos; qos = [3, 3, 3];
+    global BW; BW = [0, 0, 0];
+    global PRICE; PRICE = [0.1, 0.1, 0.1];
+    REVENUE_History = zeros(1, MAX_ITER);
+    UTILITY_History = zeros(NUMBERS, MAX_ITER);
+    UTILITY_Epoch_History = zeros(NUMBERS, MAX_ITER);
+    PRICE_History = zeros(NUMBERS, MAX_ITER);
+    BW_History = zeros(NUMBERS, MAX_ITER);
+    for time=1:MAX_ITER
+        fprintf('-------------------%3d round----------------\n',time);
+        % 1. ISP更新定价策略
+        for i=1:length(BW)
+            % 第三个用户前一百轮迭代不参与
+            if i == 3 && time < 100
+                continue
+            end
+            PRICE(i) = PRICE(i) + max(0, price_step*cal_change_rate_p(i));
+        end
+        % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
+        for i=1:length(BW)
+            % 第三个用户前一百轮迭代不参与
+            if i == 3 && time < 100
+                continue
+            end
+            utility = cal_utility(i, BW(i), PRICE(i));
+            next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
+            next_utility = cal_utility(i, next_bw, PRICE(i));
+            k = 1;
+            %for k=1:MAX_ITER
+            while abs(utility - next_utility) > 10^(-3)
+                fprintf('-------%3d epoch----------\n',k);
+                BW(i) = next_bw;
+                if time == 1
+                    UTILITY_Epoch_History(i, k) = utility;
+                end
+                utility = next_utility;
+                next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
+                next_utility = cal_utility(i, next_bw, PRICE(i));
+                % fprintf('user = %d, bw = %f, utility = %f\n', i, BW(i), utility);
+                k = k + 1;
+            end
+            revenue = cal_revenue(BW(i), PRICE(i));
+            fprintf('bw = %f, price = %f\n' ,BW(i), PRICE(i));
+            UTILITY_History(i, time) = utility;
+            BW_History(i, time) = BW(i);
+        end
+        fprintf('network revenue = %f\n' , revenue);
+        % 3. ISP收益函数不是凹函数，得看是否收敛
+        REVENUE_History(time) = revenue;
+        PRICE_History(1, time) = PRICE(1);
+        PRICE_History(2, time) = PRICE(2);
+    end
+	fprintf('----------ENDING-----------\n');
+    x = [1:MAX_ITER];
+    m = [1:5:MAX_ITER];
+    figure;
+    % MarkerIndices became available in R2016b version.
+    % The workaround is plotting two times:
+    plot_utility_epoch(x, m, UTILITY_Epoch_History(1:2, 1:MAX_ITER));
+    savefig('D:\硕士毕设\matlab simulation\plot_utility_epoch_dynamic');
+    figure;
+    %plot_utility(x, m, REVENUE_History, UTILITY_History);
+    %savefig('D:\硕士毕设\matlab simulation\plot_utility');
+    %figure;
+    %plot_pb(x, m, PRICE_History, BW_History);
+    %savefig('D:\硕士毕设\matlab simulation\plot_pb');
+end
