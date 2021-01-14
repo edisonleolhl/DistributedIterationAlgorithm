@@ -29,9 +29,7 @@ function main()
             utility = cal_utility(i, BW(i), PRICE(i));
             next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
             next_utility = cal_utility(i, next_bw, PRICE(i));
-            %k = 1;
             for k=1:MAX_ITER
-            %while abs(utility - next_utility) > 10^(-4)
                 %fprintf('-------%3d epoch----------\n',k);
                 BW(i) = next_bw;
                 if time == 1
@@ -49,7 +47,6 @@ function main()
             BW_History(i, time) = BW(i);
         end
         fprintf('network revenue = %f\n' , revenue);
-        % 3. ISP收益函数不是凹函数，得看是否收敛
         REVENUE_History(time) = revenue;
         PRICE_History(1, time) = PRICE(1);
         PRICE_History(2, time) = PRICE(2);
@@ -77,7 +74,6 @@ function plot_pb(x, m, PRICE_History, BW_History)
     plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', x(m), PRICE_History(2, m), 'bx', x(m), BW_History(1, m), 'rd', x(m), BW_History(2, m), 'cp');
     legend({'ISP对用户1定价策略', 'ISP对用户2定价策略', '用户1带宽策略', '用户2带宽策略'}, 'Location', 'northeast', 'FontSize', 15);
     xlabel('迭代次数','FontSize', 15);
-    %ylabel('效益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked')
 end
 
