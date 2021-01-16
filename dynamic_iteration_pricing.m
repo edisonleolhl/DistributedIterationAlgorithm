@@ -11,6 +11,8 @@ function main()
     global qos; qos = [1, 1, 1];
     global BW; BW = [0, 0, 0];
     global PRICE; PRICE = [0.1, 0.1, 0.0];
+    global OPTIMAL_REVENUE_History; OPTIMAL_REVENUE_History = zeros(1, MAX_ITER);
+    cal_optimal_revenue_history();
     REVENUE_History = zeros(1, MAX_ITER);
     UTILITY_History = zeros(NUMBERS, MAX_ITER);
     UTILITY_Epoch_History = zeros(NUMBERS, MAX_ITER);
@@ -26,7 +28,7 @@ function main()
                 if time < 200
                     continue
                 elseif time == 200
-                    PRICE(i) = PRICE(min_distance_index());
+                    PRICE(i) = mean(PRICE(1:2));
                     fprintf('预测价格为%f\n', PRICE(i));
                     continue;
                 elseif time >= 400
@@ -88,6 +90,12 @@ function main()
     figure;
     plot_bw_dynamic(x, m, BW_History);
     savefig('D:\硕士毕设\matlab simulation\plot_bw_dynamic');
+    figure;
+    plot_theoretical_revenue_dynamic(x, m, REVENUE_History);
+    savefig('D:\硕士毕设\matlab simulation\plot_theoretical_revenue_dynamic');
+    
+    fprintf('optimal_revenue1 = %f\n', OPTIMAL_REVENUE_History(1));
+    fprintf('optimal_revenue2 = %f\n', OPTIMAL_REVENUE_History(201));
 end
 
 function plot_price_dynamic(x, m, PRICE_History)
@@ -98,8 +106,10 @@ function plot_price_dynamic(x, m, PRICE_History)
     plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
         x(m), PRICE_History(2, m), 'kx',  x(m), PRICE_History(3, m), 'bp');
     legend({'ISP对用户1定价策略', 'ISP对用户2定价策略', 'ISP对用户3定价策略'}, 'Location', 'northwest', 'FontSize', 10);
+    ylim([0 4]);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('价格','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_bw_dynamic(x, m, BW_History)
@@ -110,7 +120,8 @@ function plot_bw_dynamic(x, m, BW_History)
     plot_pb_markers = plot(x(m), BW_History(1, m), 'rd', x(m), BW_History(2, m), 'c+', x(m), BW_History(3, m), 'ms');
     legend({'用户1带宽策略', '用户2带宽策略', '用户3带宽策略'}, 'Location', 'northeast', 'FontSize', 10);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('带宽','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_utility_dynamic(x, m, REVENUE_History, UTILITY_History)
@@ -122,10 +133,52 @@ function plot_utility_dynamic(x, m, REVENUE_History, UTILITY_History)
         x(m), UTILITY_History(1, m), 'g*', x(m), UTILITY_History(2, m), 'bx', ...,
         x(m), UTILITY_History(3, m), 'cp');
     legend({'ISP收益函数', '用户1效用函数', '用户2效用函数', '用户3效用函数'},'FontSize', 10);
-    set(gca,'YTick',[1:16])
+    ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('效益','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_theoretical_revenue_dynamic(x, m, REVENUE_History)
+    global OPTIMAL_REVENUE_History;
+    global MAX_ITER;
+    plot_revenue = plot(x, OPTIMAL_REVENUE_History, 'k-', x, REVENUE_History, 'r-');
+    hold on;
+    plot_revenue_makers = plot(x(m), OPTIMAL_REVENUE_History(m), 'k*', x(m), REVENUE_History(m), 'rd');
+    legend({'ISP理论收益', 'ISP实际收益'},'FontSize', 10);
+    ylim([0 10]);
+    xlabel('迭代次数','FontSize', 15);
+    ylabel('收益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');;
+end
+
+function cal_optimal_revenue_history()
+    global will;
+    global qos;
+    global repu;
+    global CAPACITY;
+    global OPTIMAL_REVENUE_History;
+    revenue1 = 0;
+    revenue2 = 0;
+    for nums=[2,3]
+        temp1 = 0;
+        for i=1:nums
+            temp1 = temp1 + (repu*qos(i)) ^ (-1);
+        end
+        temp2 = 0;
+        for i=1:nums
+            temp2 = temp2 + (repu*qos(i)) ^ (-1) * will(i);
+        end
+        revenue = sum(will(1:nums)) - nums * temp2 / (CAPACITY+temp1);    
+        if nums == 2
+            revenue1 = revenue;
+        else
+            revenue2 = revenue;
+        end
+    end
+    OPTIMAL_REVENUE_History(1:200) = revenue1;
+    OPTIMAL_REVENUE_History(201:400) = revenue2;
+    OPTIMAL_REVENUE_History(401:600) = revenue1;
 end
 
 function util=cal_utility(i, b, p)
@@ -161,21 +214,4 @@ function rp=cal_change_rate_p(i)
     if sum(BW) < CAPACITY / 5
         rp = -abs(rp);
     end
-end
-
-function index=min_distance_index()
-    global BW;
-    global CAPACITY;
-    global will;
-    global qos;
-    global NUMBERS;
-    min_d = 1000;
-    index = 1;
-    for i=1:NUMBERS-1
-        d = sqrt((will(i)-will(NUMBERS)) ^ 2 + (qos(i)-qos(NUMBERS)) ^ 2);
-        if d < min_d
-            min_d = d;
-            index = i;
-        end
-    end  
 end

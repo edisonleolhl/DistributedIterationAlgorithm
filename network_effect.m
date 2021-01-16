@@ -1,11 +1,12 @@
-% CAPACITY=10与15进行比较，探讨纳什均衡状态下不同网络容量对价格与带宽的影响
-% repu=10与15进行比较，探讨纳什均衡状态下不同网络质量对价格与带宽的影响
+% CAPACITY=10与5进行比较，探讨纳什均衡状态下不同网络容量对价格与带宽的影响
+% repu=10与5进行比较，探讨纳什均衡状态下不同网络质量对价格与带宽的影响
 function main()
     bw_step = 0.01;
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
-    global MAX_ITER; MAX_ITER = 200; % 最大迭代次数
     global CAPACITY; CAPACITY = 10;
+    global MAX_ITER; MAX_ITER = 200; % 最大迭代次数
+    global MAX_EPOCH; MAX_EPOCH = 400; % 用户最大迭代次数
     global NUMBERS; NUMBERS = 2;
     global will; will = [1.5, 2]; % 用户购买意愿
     global qos; qos = [1, 1]; % 1~5，用户对QoS的需求
@@ -31,7 +32,7 @@ function main()
             utility = cal_utility(i, BW(i), PRICE(i));
             next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
             next_utility = cal_utility(i, next_bw, PRICE(i));
-            for k=1:MAX_ITER
+            for k=1:MAX_EPOCH
                 %fprintf('-------%3d epoch----------\n',k);
                 BW(i) = next_bw;
                 utility = next_utility;
@@ -64,28 +65,49 @@ function main()
             % 回归初始条件
             BW = [0, 0];
             PRICE = [0.1, 0.1];
-%             CAPACITY = 15;
-            repu = 15;
+%             CAPACITY = 5;
+            repu = 5;
         end
     end
 	fprintf('----------ENDING-----------\n');
     x = [1:MAX_ITER];
-    m = [1:10:MAX_ITER];
     figure;
     % MarkerIndices became available in R2016b version.
     % The workaround is plotting two times:
-    % plot capacity effect
+    % ----------plot capacity effect----------
+%     m = [1:20:MAX_ITER];
 %     plot_capacity_effect_on_price(x, m, PRICE_History_1, PRICE_History_2);
 %     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_price');
 %     figure;
 %     plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2);
 %     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_bw');
-    % plot capacity effect
+%     figure;
+%     plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
+%     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_utility');
+    % ----------plot repu effect----------
+    m = [1:10:MAX_ITER];
     plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2);
     savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_price');
     figure;
     plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2);
     savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_bw');
+    figure;
+    plot_repu_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
+    savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_utility');
+end
+
+function plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2)
+    global MAX_ITER;
+    plot_revenue = plot(x, REVENUE_History_1, 'b-', ...,
+        x, REVENUE_History_2, 'r-');
+    hold on;
+    plot_revenue_makers = plot(x(m), REVENUE_History_1(m), 'b*', ...,
+        x(m), REVENUE_History_2(m), 'rd');
+    legend({'C=10, ISP收益', 'C=5, ISP收益'},'FontSize', 10);
+    set(gca,'YTick',[1:16])
+    xlabel('迭代次数','FontSize', 15);
+    ylabel('效益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_capacity_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
@@ -95,12 +117,13 @@ function plot_capacity_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
     hold on;
     plot_pb_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
         x(m), PRICE_History_2(1, m), 'mp', x(m), PRICE_History_2(2, m), 'cd');
-    legend({'C=10, ISP对用户1(w=1.5)定价策略', 'C=10, ISP对用户2(w=2.0)定价策略', ...,
-        'C=15, ISP对用户1(w=1.5)定价策略', 'C=15, ISP对用户2(w=2.0)定价策略'}, ...,
+    legend({'C=10, ISP对用户1定价策略', 'C=10, ISP对用户2定价策略', ...,
+        'C=5, ISP对用户1定价策略', 'C=5, ISP对用户2定价策略'}, ...,
         'Location', 'southeast', 'FontSize', 10);
 %     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('价格','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2)
@@ -110,12 +133,13 @@ function plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2)
     hold on;
     plot_pb_markers = plot(x(m), BW_History_1(1, m), 'g*', x(m), BW_History_1(2, m), 'bx', ...,
         x(m), BW_History_2(1, m), 'mp', x(m), BW_History_2(2, m), 'cd');
-    legend({'C=10, 用户1(w=1.5)带宽策略', 'C=10, 用户2(w=2.0)带宽策略', ...,
-        'C=15, 用户1(w=1.5)带宽策略', 'C=15, 用户2(w=2.0)带宽策略'}, ...,
+    legend({'C=10, 用户1带宽策略', 'C=10, 用户2带宽策略', ...,
+        'C=5, 用户1带宽策略', 'C=5, 用户2带宽策略'}, ...,
         'Location', 'northeast', 'FontSize', 10);
 %     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('带宽','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
@@ -125,12 +149,13 @@ function plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
     hold on;
     plot_pb_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
         x(m), PRICE_History_2(1, m), 'mp', x(m), PRICE_History_2(2, m), 'cd');
-    legend({'r=10, ISP对用户1(w=1.5)定价策略', 'r=10, ISP对用户2(w=2.0)定价策略', ...,
-        'r=15, ISP对用户1(w=1.5)定价策略', 'r=15, ISP对用户2(w=2.0)定价策略'}, ...,
+    legend({'r=10, ISP对用户1定价策略', 'r=10, ISP对用户2定价策略', ...,
+        'r=5, ISP对用户1定价策略', 'r=5, ISP对用户2定价策略'}, ...,
         'Location', 'southeast', 'FontSize', 10);
 %     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('价格','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2)
@@ -140,12 +165,27 @@ function plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2)
     hold on;
     plot_pb_markers = plot(x(m), BW_History_1(1, m), 'g*', x(m), BW_History_1(2, m), 'bx', ...,
         x(m), BW_History_2(1, m), 'mp', x(m), BW_History_2(2, m), 'cd');
-    legend({'r=10, 用户1(w=1.5)带宽策略', 'r=10, 用户2(w=2.0)带宽策略', ...,
-        'r=15, 用户1(w=1.5)带宽策略', 'r=15, 用户2(w=2.0)带宽策略'}, ...,
+    legend({'r=10, 用户1带宽策略', 'r=10, 用户2带宽策略', ...,
+        'r=5, 用户1带宽策略', 'r=5, 用户2带宽策略'}, ...,
         'Location', 'northeast', 'FontSize', 10);
 %     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked')
+    ylabel('带宽','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_repu_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2)
+    global MAX_ITER;
+    plot_revenue = plot(x, REVENUE_History_1, 'b-', ...,
+        x, REVENUE_History_2, 'r-');
+    hold on;
+    plot_revenue_makers = plot(x(m), REVENUE_History_1(m), 'b*', ...,
+        x(m), REVENUE_History_2(m), 'rd');
+    legend({'r=10, ISP收益', 'r=5, ISP收益'},'FontSize', 10);
+    set(gca,'YTick',[1:16])
+    xlabel('迭代次数','FontSize', 15);
+    ylabel('效益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function util=cal_utility(i, b, p)
