@@ -1,24 +1,26 @@
-% will=1.5与2.0进行比较，探讨纳什均衡状态下不同网络容量对价格与带宽的影响
-% qos=1与3进行比较，探讨纳什均衡状态下不同网络质量对价格与带宽的影响
+% will=[1:0.1:2.1]探讨用户购买意愿对ISP收益的影响
+% qos=1与3进行比较，探讨用户QoS需求对ISP收益的影响
 function main()
     bw_step = 0.01;
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 100;
     global MAX_ITER; MAX_ITER = 200; % 最大迭代次数
-    global will; will = ones(1, 30); % 用户购买意愿
-    global qos; qos = ones(1, 30); % 用户对QoS的需求
-    global BW; BW = zeros(1, 30); % 三十个用户，初始带宽为0
-    global PRICE; PRICE = 0.1*ones(1, 30); % 网络j的初始价格
-    global NUMBERS; NUMBERS = 3; % 初始测试三个用户
+    global NUMBERS; NUMBERS = 30;
+    global will; will = ones(1, NUMBERS); % 用户购买意愿
+    global qos; qos = ones(1, NUMBERS); % 用户对QoS的需求
+    global BW; BW = zeros(1, NUMBERS); % 三十个用户，初始带宽为0
+    global PRICE; PRICE = 0.1*ones(1, NUMBERS); % 网络j的初始价格
     revenue_trends = zeros(1, 10);
-    x = [3:3:30];
-    for num=x
-        fprintf('-------------------%3d users----------------\n',num);
+%     revenue_trends = zeros(1, 9);
+    x = [1:0.1:1.9];
+%     x = [1:0.5:5]
+    for w=x
+        fprintf('-------------------w = %3d----------------\n',w);
         % 回归初始条件
-        BW = zeros(1, num);
-        PRICE = 0.1*ones(1, num);
-        NUMBERS = num;
+        BW = zeros(1, NUMBERS);
+        PRICE = 0.1*ones(1, NUMBERS);
+        will = w*ones(1, 30);
         for time=1:MAX_ITER
             % fprintf('-------------------%3d round----------------\n',time);
             revenue = 0;
@@ -48,19 +50,34 @@ function main()
                 fprintf('network revenue = %f\n' , revenue);
             end
         end
-        revenue_trends(num/3) = revenue;
+        revenue_trends(round(w*10-9)) = revenue;
+%         revenue_trends(round(w*2-1)) = revenue;
     end
     fprintf('----------ENDING-----------\n');
     figure;
-    plot_numbers_effect_on_revenue(x, revenue_trends);
-    savefig('D:\硕士毕设\matlab simulation\plot_numbers_effect_on_revenue');
-end
+    plot_will_effect_on_revenue(x, revenue_trends);
+    savefig('D:\硕士毕设\matlab simulation\plot_will_effect_on_revenue');
+%     figure;
+%     plot_qos_effect_on_revenue(x, revenue_trends);
+%     savefig('D:\硕士毕设\matlab simulation\plot_qos_effect_on_revenue');
+    end
 
-function plot_numbers_effect_on_revenue(x, revenue_trends)
+function plot_will_effect_on_revenue(x, revenue_trends)
     plot_revenue = plot(x, revenue_trends, 'r-*');
     legend({'ISP收益'},'FontSize', 15, 'Location', 'northwest');
-    xlim([0 35]);
-    xlabel('用户数','FontSize', 15);
+    xlim([0.9 2]);
+    set(gca,'xtick', [0.9:0.1:2]);
+    xlabel('用户购买意愿（willing）','FontSize', 15);
+    ylabel('效益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_qos_effect_on_revenue(x, revenue_trends)
+    plot_revenue = plot(x, revenue_trends, 'r-*');
+    legend({'ISP收益'},'FontSize', 15, 'Location', 'northwest');
+    xlim([0.5 5.5]);
+    set(gca,'xtick', [0.5:0.5:5.5]);
+    xlabel('用户QoS需求','FontSize', 15);
     ylabel('效益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
