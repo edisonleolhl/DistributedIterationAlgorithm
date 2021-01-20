@@ -56,10 +56,10 @@ function main()
     fprintf('----------ENDING-----------\n');
     figure;
     plot_will_effect_on_revenue(x, revenue_trends);
-    savefig('D:\硕士毕设\matlab simulation\plot_will_effect_on_revenue');
+    savefig('plot_will_effect_on_revenue');
 %     figure;
 %     plot_qos_effect_on_revenue(x, revenue_trends);
-%     savefig('D:\硕士毕设\matlab simulation\plot_qos_effect_on_revenue');
+%     savefig('plot_qos_effect_on_revenue');
     end
 
 function plot_will_effect_on_revenue(x, revenue_trends)

@@ -53,7 +53,7 @@ function main()
     fprintf('----------ENDING-----------\n');
     figure;
     plot_numbers_effect_on_revenue(x, revenue_trends);
-    savefig('D:\À∂ ø±œ…Ë\matlab simulation\plot_numbers_effect_on_revenue');
+    savefig('plot_numbers_effect_on_revenue');
 end
 
 function plot_numbers_effect_on_revenue(x, revenue_trends)

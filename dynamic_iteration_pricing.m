@@ -83,16 +83,16 @@ function main()
     % The workaround is plotting two times:
     figure;
     plot_utility_dynamic(x, m, REVENUE_History, UTILITY_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_utility_dynamic');
+    savefig('plot_utility_dynamic');
     figure;
     plot_price_dynamic(x, m, PRICE_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_price_dynamic');
+    savefig('plot_price_dynamic');
     figure;
     plot_bw_dynamic(x, m, BW_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_bw_dynamic');
+    savefig('plot_bw_dynamic');
     figure;
     plot_theoretical_revenue_dynamic(x, m, REVENUE_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_theoretical_revenue_dynamic');
+    savefig('plot_theoretical_revenue_dynamic');
     
     fprintf('optimal_revenue1 = %f\n', OPTIMAL_REVENUE_History(1));
     fprintf('optimal_revenue2 = %f\n', OPTIMAL_REVENUE_History(201));

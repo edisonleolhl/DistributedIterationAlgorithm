@@ -58,13 +58,13 @@ function main()
     % MarkerIndices became available in R2016b version.
     % The workaround is plotting two times:
     plot_utility_epoch(x, m, UTILITY_Epoch_History(1:NUMBERS, 1:MAX_ITER));
-    savefig('D:\硕士毕设\matlab simulation\plot_utility_epoch');
+    savefig('plot_utility_epoch');
     figure;
     plot_utility(x, m, REVENUE_History, UTILITY_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_utility');
+    savefig('plot_utility');
     figure;
     plot_pb(x, m, PRICE_History, BW_History);
-    savefig('D:\硕士毕设\matlab simulation\plot_pb');
+    savefig('plot_pb');
 end
 
 function plot_pb(x, m, PRICE_History, BW_History)

@@ -77,23 +77,23 @@ function main()
     % ----------plot capacity effect----------
 %     m = [1:20:MAX_ITER];
 %     plot_capacity_effect_on_price(x, m, PRICE_History_1, PRICE_History_2);
-%     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_price');
+%     savefig('plot_capacity_effect_on_price');
 %     figure;
 %     plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2);
-%     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_bw');
+%     savefig('plot_capacity_effect_on_bw');
 %     figure;
 %     plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
-%     savefig('D:\硕士毕设\matlab simulation\plot_capacity_effect_on_utility');
+%     savefig('plot_capacity_effect_on_utility');
     % ----------plot repu effect----------
     m = [1:10:MAX_ITER];
     plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2);
-    savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_price');
+    savefig('plot_repu_effect_on_price');
     figure;
     plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2);
-    savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_bw');
+    savefig('plot_repu_effect_on_bw');
     figure;
     plot_repu_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
-    savefig('D:\硕士毕设\matlab simulation\plot_repu_effect_on_utility');
+    savefig('plot_repu_effect_on_utility');
 end
 
 function plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2)
