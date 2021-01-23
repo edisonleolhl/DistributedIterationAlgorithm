@@ -17,7 +17,7 @@ function main()
     UTILITY_Epoch_History = zeros(NUMBERS, MAX_ITER);
     PRICE_History = zeros(NUMBERS, MAX_ITER);
     BW_History = zeros(NUMBERS, MAX_ITER);
-    for time=1:MAX_ITER
+    for time=1:2*MAX_ITER
         fprintf('-------------------%3d round----------------\n',time);
         revenue = 0;
         % 1. ISP更新定价策略
@@ -33,6 +33,7 @@ function main()
                 %fprintf('-------%3d epoch----------\n',k);
                 BW(i) = next_bw;
                 if time == 1
+                    % 仅在第一轮迭代中绘制用户epoch迭代过程，因为曲线趋势便于展示
                     UTILITY_Epoch_History(i, k) = utility;
                 end
                 utility = next_utility;
@@ -43,13 +44,26 @@ function main()
             end
             revenue = revenue + cal_revenue(BW(i), PRICE(i));
             fprintf('bw = %f, price = %f\n' ,BW(i), PRICE(i));
-            UTILITY_History(i, time) = utility;
-            BW_History(i, time) = BW(i);
+            if time <= MAX_ITER
+                UTILITY_History(i, time) = utility;
+            else
+                BW_History(i, time-MAX_ITER) = BW(i);
+            end
         end
         fprintf('network revenue = %f\n' , revenue);
-        REVENUE_History(time) = revenue;
-        PRICE_History(1, time) = PRICE(1);
-        PRICE_History(2, time) = PRICE(2);
+        if time <= MAX_ITER
+            REVENUE_History(time) = revenue;           
+        else
+            PRICE_History(1, time-MAX_ITER) = PRICE(1);
+            PRICE_History(2, time-MAX_ITER) = PRICE(2);
+        end
+        if time == MAX_ITER
+            % 改变用户属性，在同一幅图中绘制定价与带宽策略
+            BW = [0, 0];
+            PRICE = [0.1, 0.1];
+            will = [1.5, 2];
+            qos = [1, 1];
+        end
     end
 	fprintf('----------ENDING-----------\n');
     x = [1:MAX_ITER];
@@ -69,20 +83,30 @@ end
 
 function plot_pb(x, m, PRICE_History, BW_History)
     global MAX_ITER;
-    plot_pb = plot(x, PRICE_History(1, 1:MAX_ITER), 'g-', x, PRICE_History(2, 1:MAX_ITER), 'b-', x, BW_History(1, 1:MAX_ITER), 'r-', x, BW_History(2, 1:MAX_ITER), 'c-');
+    plot_pb = plot(x, PRICE_History(1, 1:MAX_ITER), 'g-', ...,
+        x, PRICE_History(2, 1:MAX_ITER), 'b-', ...,
+        x, BW_History(1, 1:MAX_ITER), 'r-', ...,
+        x, BW_History(2, 1:MAX_ITER), 'c-');
     hold on;
-    plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', x(m), PRICE_History(2, m), 'bx', x(m), BW_History(1, m), 'rd', x(m), BW_History(2, m), 'cp');
-    legend({'ISP对用户1定价策略', 'ISP对用户2定价策略', '用户1带宽策略', '用户2带宽策略'}, 'Location', 'northeast', 'FontSize', 15);
+    plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
+            x(m), PRICE_History(2, m), 'bx', ...,
+            x(m), BW_History(1, m), 'rd', ...,
+            x(m), BW_History(2, m), 'cp');
+    legend(plot_pb_markers, {'ISP对用户1定价策略', 'ISP对用户2定价策略', ...,
+        '用户1带宽策略', '用户2带宽策略'}, 'Location', 'northeast', 'FontSize', 15);
     xlabel('迭代次数','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked')
 end
 
 function plot_utility_epoch(x, m, UTILITY_Epoch_History)
     global MAX_ITER;
-    plot_revenue = plot(x, UTILITY_Epoch_History(1, 1:MAX_ITER), 'g-', x, UTILITY_Epoch_History(2, 1:MAX_ITER), 'b-');
+    plot_revenue = plot(x, UTILITY_Epoch_History(1, 1:MAX_ITER), 'g-', ...,
+        x, UTILITY_Epoch_History(2, 1:MAX_ITER), 'b-');
     hold on;
-    plot_revenue_makers = plot(x(m), UTILITY_Epoch_History(1, m), 'g*', x(m), UTILITY_Epoch_History(2, m), 'bp');
-    legend({'qos=1.0', 'qos=5.0'}, 'Location', 'southeast', 'FontSize', 15);
+    plot_revenue_makers = plot(x(m), UTILITY_Epoch_History(1, m), 'g*', ...,
+        x(m), UTILITY_Epoch_History(2, m), 'bp');
+    legend(plot_revenue_makers, {'qos=1.0', 'qos=5.0'},  ...,
+        'Location', 'southeast', 'FontSize', 15);
     xlabel('用户迭代次数(ISP Epoch内)','FontSize', 15);
     ylabel('用户效用函数','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked')
@@ -90,10 +114,15 @@ end
 
 function plot_utility(x, m, REVENUE_History, UTILITY_History)
     global MAX_ITER;
-    plot_revenue = plot(x, REVENUE_History, 'r-', x, UTILITY_History(1, 1:MAX_ITER), 'g-', x, UTILITY_History(2, 1:MAX_ITER), 'b-');
+    plot_revenue = plot(x, REVENUE_History, 'r-', ...,
+        x, UTILITY_History(1, 1:MAX_ITER), 'g-', ...,
+        x, UTILITY_History(2, 1:MAX_ITER), 'b-');
     hold on;
-    plot_revenue_makers = plot(x(m), REVENUE_History(m), 'rd', x(m), UTILITY_History(1, m), 'g*', x(m), UTILITY_History(2, m), 'bx');
-    legend({'ISP收益函数', '用户1效用函数', '用户2效用函数'},'FontSize', 15);
+    plot_revenue_makers = plot(x(m), REVENUE_History(m), 'rd', ...,
+        x(m), UTILITY_History(1, m), 'g*', ...,
+        x(m), UTILITY_History(2, m), 'bx');
+    legend(plot_revenue_makers, {'ISP收益函数', '用户1效用函数', ...,
+        '用户2效用函数'},'FontSize', 15);
     set(gca,'YTick',[1:16])
     xlabel('迭代次数','FontSize', 15);
     ylabel('效益','FontSize', 15);

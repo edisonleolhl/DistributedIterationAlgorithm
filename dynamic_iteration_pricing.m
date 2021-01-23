@@ -103,9 +103,9 @@ function plot_price_dynamic(x, m, PRICE_History)
     plot_pb = plot(x, PRICE_History(1, 1:MAX_ITER), 'g-', ...,
         x, PRICE_History(2, 1:MAX_ITER), 'k-', x, PRICE_History(3, 1:MAX_ITER), 'b-');
     hold on;
-    plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
+    plot_p_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
         x(m), PRICE_History(2, m), 'kx',  x(m), PRICE_History(3, m), 'bp');
-    legend({'ISP对用户1定价策略', 'ISP对用户2定价策略', 'ISP对用户3定价策略'}, 'Location', 'northwest', 'FontSize', 10);
+    legend(plot_p_markers, {'ISP对用户1定价策略', 'ISP对用户2定价策略', 'ISP对用户3定价策略'}, 'Location', 'northwest', 'FontSize', 10);
     ylim([0 4]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('价格','FontSize', 15);
@@ -118,7 +118,7 @@ function plot_bw_dynamic(x, m, BW_History)
         x, BW_History(3, 1:MAX_ITER), 'm-');
     hold on;
     plot_pb_markers = plot(x(m), BW_History(1, m), 'rd', x(m), BW_History(2, m), 'c+', x(m), BW_History(3, m), 'ms');
-    legend({'用户1带宽策略', '用户2带宽策略', '用户3带宽策略'}, 'Location', 'northeast', 'FontSize', 10);
+    legend(plot_pb_markers, {'用户1带宽策略', '用户2带宽策略', '用户3带宽策略'}, 'Location', 'northeast', 'FontSize', 10);
     xlabel('迭代次数','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
@@ -132,7 +132,7 @@ function plot_utility_dynamic(x, m, REVENUE_History, UTILITY_History)
     plot_revenue_makers = plot(x(m), REVENUE_History(m), 'rd', ...,
         x(m), UTILITY_History(1, m), 'g*', x(m), UTILITY_History(2, m), 'bx', ...,
         x(m), UTILITY_History(3, m), 'cp');
-    legend({'ISP收益函数', '用户1效用函数', '用户2效用函数', '用户3效用函数'},'FontSize', 10);
+    legend(plot_revenue_makers, {'ISP收益函数', '用户1效用函数', '用户2效用函数', '用户3效用函数'},'FontSize', 10);
     ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('效益','FontSize', 15);
@@ -145,11 +145,11 @@ function plot_theoretical_revenue_dynamic(x, m, REVENUE_History)
     plot_revenue = plot(x, OPTIMAL_REVENUE_History, 'k-', x, REVENUE_History, 'r-');
     hold on;
     plot_revenue_makers = plot(x(m), OPTIMAL_REVENUE_History(m), 'k*', x(m), REVENUE_History(m), 'rd');
-    legend({'ISP理论收益', 'ISP实际收益'},'FontSize', 10);
+    legend(plot_revenue_makers, {'ISP理论收益', 'ISP实际收益'},'FontSize', 10);
     ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('收益','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked');;
+    set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function cal_optimal_revenue_history()

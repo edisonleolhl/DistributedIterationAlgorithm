@@ -11,10 +11,10 @@ function main()
     global qos; qos = ones(1, NUMBERS); % 用户对QoS的需求
     global BW; BW = zeros(1, NUMBERS); % 三十个用户，初始带宽为0
     global PRICE; PRICE = 0.1*ones(1, NUMBERS); % 网络j的初始价格
-    revenue_trends = zeros(1, 10);
-%     revenue_trends = zeros(1, 9);
-    x = [1:0.1:1.9];
-%     x = [1:0.5:5]
+%     revenue_trends = zeros(1, 10); % FOR will
+%     x = [1:0.1:1.9];
+    revenue_trends = zeros(1, 9); % FOR qos
+    x = [1:0.5:5]
     for w=x
         fprintf('-------------------w = %3d----------------\n',w);
         % 回归初始条件
@@ -50,16 +50,16 @@ function main()
                 fprintf('network revenue = %f\n' , revenue);
             end
         end
-        revenue_trends(round(w*10-9)) = revenue;
-%         revenue_trends(round(w*2-1)) = revenue;
+%         revenue_trends(round(w*10-9)) = revenue; % FOR will
+        revenue_trends(round(w*2-1)) = revenue; % FOR qos
     end
     fprintf('----------ENDING-----------\n');
-    figure;
-    plot_will_effect_on_revenue(x, revenue_trends);
-    savefig('plot_will_effect_on_revenue');
 %     figure;
-%     plot_qos_effect_on_revenue(x, revenue_trends);
-%     savefig('plot_qos_effect_on_revenue');
+%     plot_will_effect_on_revenue(x, revenue_trends);
+%     savefig('plot_will_effect_on_revenue');
+    figure;
+    plot_qos_effect_on_revenue(x, revenue_trends);
+    savefig('plot_qos_effect_on_revenue');
     end
 
 function plot_will_effect_on_revenue(x, revenue_trends)

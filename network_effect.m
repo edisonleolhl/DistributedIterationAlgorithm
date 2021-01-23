@@ -5,7 +5,8 @@ function main()
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 10;
-    global MAX_ITER; MAX_ITER = 200; % 最大迭代次数
+%     global MAX_ITER; MAX_ITER = 400; % capacity的最大迭代次数
+    global MAX_ITER; MAX_ITER = 200; % reputation的最大迭代次数
     global MAX_EPOCH; MAX_EPOCH = 400; % 用户最大迭代次数
     global NUMBERS; NUMBERS = 2;
     global will; will = [1.5, 2]; % 用户购买意愿
@@ -82,8 +83,8 @@ function main()
 %     plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2);
 %     savefig('plot_capacity_effect_on_bw');
 %     figure;
-%     plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
-%     savefig('plot_capacity_effect_on_utility');
+%     plot_capacity_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2);
+%     savefig('plot_capacity_effect_on_revenue');
     % ----------plot repu effect----------
     m = [1:10:MAX_ITER];
     plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2);
@@ -92,35 +93,34 @@ function main()
     plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2);
     savefig('plot_repu_effect_on_bw');
     figure;
-    plot_repu_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2);
-    savefig('plot_repu_effect_on_utility');
+    plot_repu_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2);
+%     savefig('plot_repu_effect_on_revenue');
 end
 
-function plot_capacity_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2)
+function plot_capacity_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2)
     global MAX_ITER;
     plot_revenue = plot(x, REVENUE_History_1, 'b-', ...,
         x, REVENUE_History_2, 'r-');
     hold on;
     plot_revenue_makers = plot(x(m), REVENUE_History_1(m), 'b*', ...,
         x(m), REVENUE_History_2(m), 'rd');
-    legend({'C=10, ISP收益', 'C=5, ISP收益'},'FontSize', 10);
+    legend(plot_revenue_makers, {'C=10, ISP收益', 'C=5, ISP收益'},'FontSize', 10);
     set(gca,'YTick',[1:16])
     xlabel('迭代次数','FontSize', 15);
-    ylabel('效益','FontSize', 15);
+    ylabel('收益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_capacity_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
     global MAX_ITER;
-    plot_pb = plot(x, PRICE_History_1(1, 1:MAX_ITER), 'g-', x, PRICE_History_1(2, 1:MAX_ITER), 'b-', ...,
+    plot_p = plot(x, PRICE_History_1(1, 1:MAX_ITER), 'g-', x, PRICE_History_1(2, 1:MAX_ITER), 'b-', ...,
         x, PRICE_History_2(1, 1:MAX_ITER), 'm-', x, PRICE_History_2(2, 1:MAX_ITER), 'c-');
     hold on;
-    plot_pb_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
+    plot_p_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
         x(m), PRICE_History_2(1, m), 'mp', x(m), PRICE_History_2(2, m), 'cd');
-    legend({'C=10, ISP对用户1定价策略', 'C=10, ISP对用户2定价策略', ...,
+    legend(plot_p_markers, {'C=10, ISP对用户1定价策略', 'C=10, ISP对用户2定价策略', ...,
         'C=5, ISP对用户1定价策略', 'C=5, ISP对用户2定价策略'}, ...,
         'Location', 'southeast', 'FontSize', 10);
-%     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('价格','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
@@ -128,15 +128,14 @@ end
 
 function plot_capacity_effect_on_bw(x, m, BW_History_1, BW_History_2)
     global MAX_ITER;
-    plot_pb = plot(x, BW_History_1(1, 1:MAX_ITER), 'g-', x, BW_History_1(2, 1:MAX_ITER), 'b-', ...,
+    plot_bw = plot(x, BW_History_1(1, 1:MAX_ITER), 'g-', x, BW_History_1(2, 1:MAX_ITER), 'b-', ...,
         x, BW_History_2(1, 1:MAX_ITER), 'm-', x, BW_History_2(2, 1:MAX_ITER), 'c-');
     hold on;
-    plot_pb_markers = plot(x(m), BW_History_1(1, m), 'g*', x(m), BW_History_1(2, m), 'bx', ...,
+    plot_bw_markers = plot(x(m), BW_History_1(1, m), 'g*', x(m), BW_History_1(2, m), 'bx', ...,
         x(m), BW_History_2(1, m), 'mp', x(m), BW_History_2(2, m), 'cd');
-    legend({'C=10, 用户1带宽策略', 'C=10, 用户2带宽策略', ...,
+    legend(plot_bw_markers, {'C=10, 用户1带宽策略', 'C=10, 用户2带宽策略', ...,
         'C=5, 用户1带宽策略', 'C=5, 用户2带宽策略'}, ...,
         'Location', 'northeast', 'FontSize', 10);
-%     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
@@ -144,15 +143,14 @@ end
 
 function plot_repu_effect_on_price(x, m, PRICE_History_1, PRICE_History_2)
     global MAX_ITER;
-    plot_pb = plot(x, PRICE_History_1(1, 1:MAX_ITER), 'g-', x, PRICE_History_1(2, 1:MAX_ITER), 'b-', ...,
+    plot_p = plot(x, PRICE_History_1(1, 1:MAX_ITER), 'g-', x, PRICE_History_1(2, 1:MAX_ITER), 'b-', ...,
         x, PRICE_History_2(1, 1:MAX_ITER), 'm-', x, PRICE_History_2(2, 1:MAX_ITER), 'c-');
     hold on;
-    plot_pb_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
+    plot_p_markers = plot(x(m), PRICE_History_1(1, m), 'g*', x(m), PRICE_History_1(2, m), 'bx', ...,
         x(m), PRICE_History_2(1, m), 'mp', x(m), PRICE_History_2(2, m), 'cd');
-    legend({'r=10, ISP对用户1定价策略', 'r=10, ISP对用户2定价策略', ...,
+    legend(plot_p_markers, {'r=10, ISP对用户1定价策略', 'r=10, ISP对用户2定价策略', ...,
         'r=5, ISP对用户1定价策略', 'r=5, ISP对用户2定价策略'}, ...,
         'Location', 'southeast', 'FontSize', 10);
-%     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('价格','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
@@ -165,23 +163,22 @@ function plot_repu_effect_on_bw(x, m, BW_History_1, BW_History_2)
     hold on;
     plot_pb_markers = plot(x(m), BW_History_1(1, m), 'g*', x(m), BW_History_1(2, m), 'bx', ...,
         x(m), BW_History_2(1, m), 'mp', x(m), BW_History_2(2, m), 'cd');
-    legend({'r=10, 用户1带宽策略', 'r=10, 用户2带宽策略', ...,
+    legend(plot_pb_markers, {'r=10, 用户1带宽策略', 'r=10, 用户2带宽策略', ...,
         'r=5, 用户1带宽策略', 'r=5, 用户2带宽策略'}, ...,
         'Location', 'northeast', 'FontSize', 10);
-%     ylim([0 3]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
-function plot_repu_effect_on_utility(x, m, REVENUE_History_1, REVENUE_History_2)
+function plot_repu_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2)
     global MAX_ITER;
     plot_revenue = plot(x, REVENUE_History_1, 'b-', ...,
         x, REVENUE_History_2, 'r-');
     hold on;
     plot_revenue_makers = plot(x(m), REVENUE_History_1(m), 'b*', ...,
         x(m), REVENUE_History_2(m), 'rd');
-    legend({'r=10, ISP收益', 'r=5, ISP收益'},'FontSize', 10);
+    legend(plot_revenue_makers, {'r=10, ISP收益', 'r=5, ISP收益'},'FontSize', 10);
     set(gca,'YTick',[1:16])
     xlabel('迭代次数','FontSize', 15);
     ylabel('效益','FontSize', 15);
