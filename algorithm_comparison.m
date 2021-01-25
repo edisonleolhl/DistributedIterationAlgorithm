@@ -1,6 +1,5 @@
 %比较分布式迭代算法与UBP的ISP Revenue
 %设置三个时间段[0,8),[8,16),[16,24)，时间槽设为0.1h，每条流持续时间设为0.1h
-%为了简化，UBP算法设置三个不同的价格，根据0、8、16点的信息来决定接下来8个小时的定价
 %DIA在每个时间槽运行一次，实时定价
 function main()
     global REPUTATION; REPUTATION = 10;
@@ -12,19 +11,33 @@ function main()
     time_slot = 1; % 时间槽为0.1h，为了便于仿真，放大十倍
     duration = 5; % 流量持续时间若大于时间槽，则可以测试算法动态收敛性
     period_total_slot = 8 / 0.1; %一个时间段总共有80个时间槽
-    peak = 400; % 流量高峰期，每小时400条流
+    peak = 400; % 流量高峰期，平均每小时400条流
     mid = 200;
     valley = 100;
     will_valley = zeros(period_total_slot, valley / 10);
     qos_valley = zeros(period_total_slot, valley / 10);
-    bw_valley = zeros(period_total_slot, valley / 10);
+    days = 3; %三天
+    total_slot = 3*days*period_total_slot;
+    REVENUE_UBP_History = zeros(1, total_slot);
+    REVENUE_DIA_History = zeros(1, total_slot);
+    UTILITY_UBP_History = zeros(1, total_slot);
+    UTILITY_DIA_History = zeros(1, total_slot);
     UBP_numbers = 48; % 3：每八小时定价一次，6：每四小时定价一次, ...
     UBP_new_pricing_slot = 0:period_total_slot/(UBP_numbers/3):period_total_slot-1; %重新定价的时间槽
-    % 先测试低谷时期，每小时100条流，每个时间槽10条流
-    for time=0:period_total_slot-1 % 时间槽从0开始
+    for time=0:period_total_slot*3*3-1
         fprintf('-------------------%3d time_slot----------------\n',time);
-        % 当前时间槽新加入用户数
-        num = mid / 10;
+        % 先测试低谷时期，每小时100条流，每个时间槽10条流
+        if mod(time,3*period_total_slot) <= period_total_slot-1
+            % 当前时间槽新加入用户数服从正态分布
+            num = round(randn+valley/10);
+            CAPACITY = 100;
+        elseif mod(time,3*period_total_slot)<= period_total_slot*2-1
+            num = round(randn+mid/10);
+            CAPACITY = 200;
+        else
+            num = round(randn+peak/10);
+            CAPACITY = 400;
+        end
         new_wills = round(rand(1, num), 1) + 1;
         new_qoss = round(4 * rand(1, num), 1) + 1;
         % 加入到时间槽历史中
@@ -32,66 +45,80 @@ function main()
         qos_valley(time+1, 1 : num) = new_qoss;
         if find(UBP_new_pricing_slot == time)
             % UBP重新决定price
-            if time + 1 - duration >= 0
-                wills_mat = will_valley(time+2-duration : time+1, 1 : num);
-                qoss_mat = qos_valley(time+2-duration : time+1, 1 : num);
-            else
-                wills_mat = will_valley(1 : time+1, 1 : num);
-                qoss_mat = qos_valley(1 : time+1, 1 : num);
-            end
-            wills_vec = wills_mat(:);
-            qoss_vec = qoss_mat(:);
-            price = UBP(wills_vec, qoss_vec);
-            
-            % UBP的user根据新price，决定自己的bw
-            if time + 1 - duration >= 0
-                for t = time+2-duration : time+1
-                    bws = user_epoch(will_valley(t, 1:num), qos_valley(t, 1:num), price);
-                    bw_valley(t, 1 : num) = bws;
-                end
-                bw_mat = bw_valley(time+2-duration : time+1, 1 : num);
-            else
-                for t = 1 : time+1
-                    bws = user_epoch(will_valley(t, 1:num), qos_valley(t, 1:num), price);
-                    bw_valley(t, 1 : num) = bws;
-                end
-                bw_mat = bw_valley(1 : time + 1, 1 : num);
-            end
-        else
-            % UBP沿用之前price
-            bws = user_epoch(new_wills, new_qoss, price);
-            bw_valley(time+1, 1 : num) = bws;
-            if time + 1 - duration >= 0
-                bw_mat = bw_valley(time+2-duration : time+1, 1 : num);
-            else
-                bw_mat = bw_valley(1 : time + 1, 1 : num);
-            end
+            price = UBP(new_wills, new_qoss);
         end
-        bw_vec = bw_mat(:);
-        revenue_UBP = price*sum(bw_vec);
+        bws = user_epoch(new_wills, new_qoss, price);
+        revenue_UBP = price*sum(bws);
+        REVENUE_UBP_History(time+1) = revenue_UBP;
         fprintf('UBP network revenue = %f\n' , revenue_UBP);
-        % DIA
-        revenue_DIA = DIA(time, duration, num, will_valley, qos_valley);
-        fprintf('DIA network revenue = %f\n' , revenue_DIA);
+        utilitys = zeros(1, num);
+        for i=1:num
+            utilitys(i) = cal_utility(i, new_wills, new_qoss, bws(i), price);
+        end
+        utility_UBP = mean(utilitys);
+        UTILITY_UBP_History(time+1) = utility_UBP;
+        fprintf('UBP avg user utility = %f\n' , utility_UBP);
+        % DIP
+        [revenue_DIA, utility_DIA] = DIP(new_wills, new_qoss);
+        REVENUE_DIA_History(time+1) = revenue_DIA;
+        fprintf('DIP network revenue = %f\n' , revenue_DIA);
+        UTILITY_DIA_History(time+1) = utility_DIA;
+        fprintf('DIP avg user utility = %f\n' , utility_DIA);
     end
+    figure;
+    plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History);
+    savefig('plot_revenue_comparison');
+    figure;
+    plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
+    savefig('plot_utility_comparison');
 end
 
-function revenue_DIA = DIA(time, duration, num, will_valley, qos_valley)
+function plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History)
+    x = [1:total_slot];
+    m = [1:2:total_slot];
+%     plot_r = plot(x, REVENUE_UBP_History, 'b-', x, REVENUE_DIA_History, 'r-');
+%     hold on;
+    plot_r_markers = plot(x(m), REVENUE_UBP_History(m), 'b-', ...,
+        x(m), REVENUE_DIA_History(m), 'r-');
+%     plot_r_markers(1).LineWidth = 1;
+%     plot_r_markers(2).LineWidth = 1;
+    legend({'UBP ISP效益', 'DIP ISP效益'}, 'Location', 'northwest', 'FontSize', 10);
+    xticks([0:total_slot/9:total_slot]);
+    xticklabels([0:total_slot/90:total_slot/10]);
+    xlim([0 total_slot]);
+%     ylim([0 100]);
+    xlabel('时间（小时）','FontSize', 15);
+    ylabel('效益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History)
+    x = [1:total_slot];
+    m = [1:2:total_slot];
+%     plot_r = plot(x, UTILITY_UBP_History, 'b-', x, UTILITY_DIA_History, 'r-');
+%     hold on;
+    plot_r_markers = plot(x(m), UTILITY_UBP_History(m), 'b-', ...,
+        x(m), UTILITY_DIA_History(m), 'r-');
+%     plot_r_markers(1).LineWidth = 1;
+%     plot_r_markers(2).LineWidth = 0.5;
+    legend({'UBP 用户平均效益', 'DIP 用户平均效益'}, 'Location', 'northwest', 'FontSize', 10);
+    xticks([0:total_slot/9:total_slot]);
+    xticklabels([0:total_slot/90:total_slot/10]);
+    xlim([0 total_slot]);
+%     ylim([0 100]);
+    xlabel('时间（小时）','FontSize', 15);
+    ylabel('效益','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function [revenue_DIA, utility_DIA] = DIP(wills, qoss)
     global MAX_ITER;
     global MAX_EPOCH;
     global bw_step;
     global price_step;
-    if time + 1 - duration >= 0
-        wills_mat = will_valley(time + 2 - duration : time + 1, 1 : num);
-        qoss_mat = qos_valley(time + 2 - duration : time + 1, 1 : num);
-    else
-        wills_mat = will_valley(1 : time + 1, 1 : num);
-        qoss_mat = qos_valley(1 : time + 1, 1 : num);
-    end
-    wills = wills_mat(:);
-    qoss = qoss_mat(:);
     NUMBERS = length(wills);
     bws = zeros(1, NUMBERS);
+    utilitys = zeros(1, NUMBERS);
     prices = 0.1* ones(1, NUMBERS); % DIA是分别定价
     for iter=1:MAX_ITER
 %         fprintf('-------------------%3d round----------------\n',iter);
@@ -113,10 +140,12 @@ function revenue_DIA = DIA(time, duration, num, will_valley, qos_valley)
                 k = k + 1;
             end
             revenue_DIA = revenue_DIA + cal_revenue(bws(i), prices(i));
+            utilitys(i) = utility;
         end
 %         fprintf('network revenue = %f\n' , revenue_DIA);
     end
     fprintf('price = %f\n', prices(1));
+    utility_DIA = mean(utilitys);
 end
 
 function price = UBP(wills, qoss)
