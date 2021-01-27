@@ -3,13 +3,12 @@
 %DIA在每个时间槽运行一次，实时定价
 function main()
     global REPUTATION; REPUTATION = 10;
-    global CAPACITY; CAPACITY = 100; % 网络容量要分为三个阶段，大小按照1:2:4
+    global CAPACITY; CAPACITY = 100;
     global bw_step; bw_step = 0.01;
     global price_step; price_step = 0.01;
     global MAX_ITER; MAX_ITER = 200; %TODO
     global MAX_EPOCH; MAX_EPOCH = 200;
     time_slot = 1; % 时间槽为0.1h，为了便于仿真，放大十倍
-    duration = 5; % 流量持续时间若大于时间槽，则可以测试算法动态收敛性
     period_total_slot = 8 / 0.1; %一个时间段总共有80个时间槽
     peak = 400; % 流量高峰期，平均每小时400条流
     mid = 200;
@@ -33,13 +32,13 @@ function main()
             CAPACITY = 100;
         elseif mod(time,3*period_total_slot)<= period_total_slot*2-1
             num = round(randn+mid/10);
-            CAPACITY = 200;
+            CAPACITY = 100;
         else
             num = round(randn+peak/10);
-            CAPACITY = 400;
+            CAPACITY = 100;
         end
-        new_wills = round(rand(1, num), 1) + 1;
-        new_qoss = round(4 * rand(1, num), 1) + 1;
+        new_wills = round(rand(1, num), 1) + 1; % will=[1,2]
+        new_qoss = round(rand(1, num), 1) + 1; % qos=[1,2]
         % 加入到时间槽历史中
         will_valley(time+1, 1 : num) = new_wills; %matlab下标从1开始
         qos_valley(time+1, 1 : num) = new_qoss;
@@ -65,6 +64,7 @@ function main()
         UTILITY_DIA_History(time+1) = utility_DIA;
         fprintf('DIP avg user utility = %f\n' , utility_DIA);
     end
+    save('algorithm_comparison.mat','REVENUE_UBP_History','REVENUE_DIA_History','UTILITY_UBP_History','UTILITY_DIA_History');
     figure;
     plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History);
     savefig('plot_revenue_comparison');
