@@ -13,9 +13,9 @@ function main()
     global qos; qos = [1, 1]; % 1~5，用户对QoS的需求
     global BW; BW = [0, 0]; % 两个用户，初始带宽均为0
     global PRICE; PRICE = [0.1, 0.1]; % 网络j的初始价格，对于用户1和2而言
-    REVENUE_History_1 = zeros(1, MAX_ITER);
-    REVENUE_History_2 = zeros(1, MAX_ITER);
-    UTILITY_History_1 = zeros(NUMBERS, MAX_ITER);
+    REVENUE_History_1 = zeros(1, MAX_ITER); %不同的c或r
+    REVENUE_History_2 = zeros(1, MAX_ITER); %不同的c或r
+    UTILITY_History_1 = zeros(NUMBERS, MAX_ITER); %两个用户所以是二维
     UTILITY_History_2 = zeros(NUMBERS, MAX_ITER);
     PRICE_History_1 = zeros(NUMBERS, MAX_ITER);
     PRICE_History_2 = zeros(NUMBERS, MAX_ITER);
@@ -94,7 +94,7 @@ function main()
     savefig('plot_repu_effect_on_bw');
     figure;
     plot_repu_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2);
-%     savefig('plot_repu_effect_on_revenue');
+    savefig('plot_repu_effect_on_revenue');
 end
 
 function plot_capacity_effect_on_revenue(x, m, REVENUE_History_1, REVENUE_History_2)

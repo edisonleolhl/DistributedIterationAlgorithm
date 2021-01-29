@@ -21,7 +21,7 @@ function main()
     REVENUE_DIA_History = zeros(1, total_slot);
     UTILITY_UBP_History = zeros(1, total_slot);
     UTILITY_DIA_History = zeros(1, total_slot);
-    UBP_numbers = 48; % 3：每八小时定价一次，6：每四小时定价一次, ...
+    UBP_numbers = 24; % 3：每八小时定价一次，6：每四小时定价一次, ...
     UBP_new_pricing_slot = 0:period_total_slot/(UBP_numbers/3):period_total_slot-1; %重新定价的时间槽
     for time=0:period_total_slot*3*3-1
         fprintf('-------------------%3d time_slot----------------\n',time);
@@ -32,10 +32,10 @@ function main()
             CAPACITY = 100;
         elseif mod(time,3*period_total_slot)<= period_total_slot*2-1
             num = round(randn+mid/10);
-            CAPACITY = 100;
+            CAPACITY = 200;
         else
             num = round(randn+peak/10);
-            CAPACITY = 100;
+            CAPACITY = 400;
         end
         new_wills = round(rand(1, num), 1) + 1; % will=[1,2]
         new_qoss = round(rand(1, num), 1) + 1; % qos=[1,2]
@@ -64,13 +64,13 @@ function main()
         UTILITY_DIA_History(time+1) = utility_DIA;
         fprintf('DIP avg user utility = %f\n' , utility_DIA);
     end
-    save('algorithm_comparison.mat','REVENUE_UBP_History','REVENUE_DIA_History','UTILITY_UBP_History','UTILITY_DIA_History');
+%     save('algorithm_comparison.mat','REVENUE_UBP_History','REVENUE_DIA_History','UTILITY_UBP_History','UTILITY_DIA_History');
     figure;
     plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History);
-    savefig('plot_revenue_comparison');
+%     savefig('plot_revenue_comparison');
     figure;
     plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
-    savefig('plot_utility_comparison');
+%     savefig('plot_utility_comparison');
 end
 
 function plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History)

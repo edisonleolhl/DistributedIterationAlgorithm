@@ -11,10 +11,9 @@ function main()
     global qos; qos = ones(1, NUMBERS); % 用户对QoS的需求
     global BW; BW = zeros(1, NUMBERS); % 三十个用户，初始带宽为0
     global PRICE; PRICE = 0.1*ones(1, NUMBERS); % 网络j的初始价格
-%     revenue_trends = zeros(1, 10); % FOR will
-%     x = [1:0.1:1.9];
-    revenue_trends = zeros(1, 9); % FOR qos
-    x = [1:0.5:5]
+%     x = [1:0.1:1.9]; % for will
+    x = [1:0.5:5]; % for qos 
+    revenue_trends = zeros(1, length(x));
     for w=x
         fprintf('-------------------w = %3d----------------\n',w);
         % 回归初始条件
