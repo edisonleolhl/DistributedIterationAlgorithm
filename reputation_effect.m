@@ -4,7 +4,7 @@ function main()
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 20;
-    global MAX_ITER; MAX_ITER = 500; % capacity的最大迭代次数
+    global MAX_ITER; MAX_ITER = 500;
     global MAX_EPOCH; MAX_EPOCH = 500; % 用户最大迭代次数
     global NUMBERS; NUMBERS = 5;
     global will; will = [1, 1.25, 1.5, 1.75, 2]; % 用户购买意愿
@@ -69,6 +69,9 @@ function main()
     plot_diff_repu_effect_on_bw(r_list, r_num, BW_History);
     savefig('plot_diff_repu_effect_on_bw');
     figure;
+    plot_diff_repu_effect_on_utility(r_list, r_num, UTILITY_History);
+    savefig('plot_diff_repu_effect_on_utility');
+    figure;
     plot_diff_repu_effect_on_revenue(r_list, r_num, REVENUE_History);
     savefig('plot_diff_repu_effect_on_revenue');
 end
@@ -100,6 +103,20 @@ function plot_diff_repu_effect_on_bw(r_list, r_num, BW_History)
     xlabel('网络质量(Reputation)','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     ylim([0.5 1.2]); % just for presentation
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_diff_repu_effect_on_utility(r_list, r_num, UTILITY_History)
+    plot_bw = plot(r_list, UTILITY_History(1, 1:r_num), 'b-*', ...,
+        r_list, UTILITY_History(2, 1:r_num), 'r-p', ...,
+        r_list, UTILITY_History(3, 1:r_num), 'c-d', ...,
+        r_list, UTILITY_History(4, 1:r_num), 'm->', ...,
+        r_list, UTILITY_History(5, 1:r_num), 'k-o');
+    legend({'用户1(w=1.0)效用', '用户2(w=1.25)效用', ...,
+        '用户3(w=1.5)效用', '用户4(w=1.75)效用', '用户5(w=2.0)效用'}, ...,
+        'Location', 'northwest', 'FontSize', 10);
+    xlabel('网络质量(Reputation)','FontSize', 15);
+    ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 

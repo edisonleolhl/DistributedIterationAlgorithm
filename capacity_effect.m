@@ -66,6 +66,9 @@ function main()
     plot_diff_capacity_effect_on_bw(c_list, c_num, BW_History);
     savefig('plot_diff_capacity_effect_on_bw');
     figure;
+    plot_diff_capacity_effect_on_utility(c_list, c_num, UTILITY_History);
+    savefig('plot_diff_capacity_effect_on_utility');
+    figure;
     plot_diff_capacity_effect_on_revenue(c_list, c_num, REVENUE_History);
     savefig('plot_diff_capacity_effect_on_revenue');
 end
@@ -93,6 +96,19 @@ function plot_diff_capacity_effect_on_bw(c_list, c_num, BW_History)
         'Location', 'northwest', 'FontSize', 10);
     xlabel('网络容量(Capacity)','FontSize', 15);
     ylabel('带宽','FontSize', 15);
+    set(0,'DefaultFigureWindowStyle','docked');
+end
+
+function plot_diff_capacity_effect_on_utility(c_list, c_num, UTILITY_History)
+    plot_p = plot(c_list, UTILITY_History(1, 1:c_num), 'b-*', ...,
+        c_list, UTILITY_History(2, 1:c_num), 'r-p', ...,
+        c_list, UTILITY_History(3, 1:c_num), 'c-d', ...,
+        c_list, UTILITY_History(4, 1:c_num), 'm->');
+    legend({'用户1(w=1,q=1)效用', '用户2(w=2,q=1)效用', ...,
+        '用户3(w=1,q=5）效用', '用户4(w=2,q=5)效用'}, ...,
+        'Location', 'northwest', 'FontSize', 10);
+    xlabel('网络容量(Capacity)','FontSize', 15);
+    ylabel('价格','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
