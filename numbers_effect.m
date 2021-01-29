@@ -71,7 +71,7 @@ function plot_numbers_effect_on_pb(x, avg_price_trends, avg_bw_trends)
     plot(x, avg_price_trends, 'b-p');
     yyaxis right
     plot(x, avg_bw_trends, 'r-*');
-    legend({'ISP对用户的平均定价策略', '用户平均带宽策略'}, ...,
+    legend({'ISP平均定价策略', '用户平均带宽策略'}, ...,
         'FontSize', 15, 'Location', 'northwest');
     xlim([3 30]);
     yyaxis left
