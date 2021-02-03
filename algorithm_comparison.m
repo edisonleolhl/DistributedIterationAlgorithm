@@ -22,30 +22,28 @@ function main()
         REVENUE_DIA_History = zeros(1, total_slot);
         UTILITY_UBP_History = zeros(1, total_slot);
         UTILITY_DIA_History = zeros(1, total_slot);
-        UBP_numbers = 240; % UBP每天定价24次，即每小时变更一次价格
+        UBP_numbers = 24; % UBP每天定价24次，即每小时变更一次价格
         UBP_new_pricing_slot = 0:3*period_total_slot/UBP_numbers:total_slot-1; %重新定价的时间槽
         for time=0:total_slot-1
             fprintf('-------------------%3d time_slot----------------\n',time);
             % 先测试低谷时期，每小时100条流，每个时间槽10条流
-%             if mod(time,3*period_total_slot) <= period_total_slot-1
-%                 % 当前时间槽新加入用户数服从正态分布
-%                 num = round(randn+valley/10);
-%                 if type == 'v'
-%                     CAPACITY = 100;
-%                 end
-%             elseif mod(time,3*period_total_slot)<= period_total_slot*2-1
-%                 num = round(randn+mid/10);
-%                 if type == 'v'
-%                     CAPACITY = 200;
-%                 end
-%             else
-%                 num = round(randn+peak/10);
-%                 if type == 'v'
-%                     CAPACITY = 400;
-%                 end
-%             end
-            num = round(randn+400/10);
-            CAPACITY = 400;
+            if mod(time,3*period_total_slot) <= period_total_slot-1
+                % 当前时间槽新加入用户数服从正态分布
+                num = round(randn+valley/10);
+                if type == 'v'
+                    CAPACITY = 100;
+                end
+            elseif mod(time,3*period_total_slot)<= period_total_slot*2-1
+                num = round(randn+mid/10);
+                if type == 'v'
+                    CAPACITY = 200;
+                end
+            else
+                num = round(randn+peak/10);
+                if type == 'v'
+                    CAPACITY = 400;
+                end
+            end
             new_wills = round(rand(1, num), 1) + 1; % will=[1,2]
             new_qoss = round(rand(1, num), 1) + 1; % qos=[1,2]
             % 加入到时间槽历史中
@@ -74,15 +72,15 @@ function main()
             UTILITY_DIA_History(time+1) = utility_DIA;
             fprintf('DIP avg user utility = %f\n' , utility_DIA);
         end
-        now_str = datestr(now,31);
+        now_str = datestr(now,30);
         if type == 'v'
             mat_file = strcat(strcat('algorithm_comparison_capacity_varied_', now_str), '.mat');
-%             save(mat_file,'REVENUE_UBP_History','REVENUE_DIA_History','UTILITY_UBP_History','UTILITY_DIA_History');
+            save(mat_file,'REVENUE_UBP_History','REVENUE_DIA_History','UTILITY_UBP_History','UTILITY_DIA_History');
             figure;
             plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History);
-%             savefig(strcat('plot_revenue_comparison_capacity_varied_', now_str));
-            figure;
-            plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
+            savefig(strcat('plot_revenue_comparison_capacity_varied_', now_str));
+%             figure;
+%             plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
 %             savefig(strcat('plot_utility_comparison_capacity_varied_', now_str));
         else
             mat_file = strcat(strcat('algorithm_comparison_capacity_fixed_', now_str), '.mat');
@@ -90,9 +88,9 @@ function main()
             figure;
             plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_History);
             savefig(strcat('plot_revenue_comparison_capacity_fixed_', now_str));
-            figure;
-            plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
-            savefig(strcat('plot_utility_comparison_capacity_fixed_', now_str));
+%             figure;
+%             plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_History);
+%             savefig(strcat('plot_utility_comparison_capacity_fixed_', now_str));
         end
     end
 end
@@ -117,7 +115,6 @@ function plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_Hi
     plot(x(m), UTILITY_UBP_History(m), 'b-', ...,
         x(m), UTILITY_DIA_History(m), 'r-');
     legend({'UBP 用户平均效益', 'DIP 用户平均效益'}, 'Location', 'northwest', 'FontSize', 10);
-    xticks([0:total_slot/9:total_slot]);
     xticklabels([0:total_slot/90:total_slot/10]);
     xlim([0 total_slot]);
     xlabel('时间（小时）','FontSize', 15);
