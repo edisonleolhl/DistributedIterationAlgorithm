@@ -101,8 +101,11 @@ function plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIA_Hi
     plot(x(m), REVENUE_UBP_History(m), 'b-', ...,
         x(m), REVENUE_DIA_History(m), 'r-');
     legend({'UBP ISP效益', 'DIP ISP效益'}, 'Location', 'northwest', 'FontSize', 10);
-    xticks([0:total_slot/9:total_slot]);
-    xticklabels([0:total_slot/90:total_slot/10]);
+%     xticks([0:total_slot/9:total_slot]); % only available after
+%     R2016b(included)
+    set(gca, 'Xticks', [0:total_slot/9:total_slot]);
+%     xticklabels([0:total_slot/90:total_slot/10]);
+    set(gca, 'XticksLabels', [0:total_slot/90:total_slot/10]);
     xlim([0 total_slot]);
     xlabel('时间（小时）','FontSize', 15);
     ylabel('效益','FontSize', 15);
@@ -115,8 +118,10 @@ function plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIA_Hi
     plot(x(m), UTILITY_UBP_History(m), 'b-', ...,
         x(m), UTILITY_DIA_History(m), 'r-');
     legend({'UBP 用户平均效益', 'DIP 用户平均效益'}, 'Location', 'northwest', 'FontSize', 10);
-    xticklabels([0:total_slot/90:total_slot/10]);
-    xlim([0 total_slot]);
+%     xticks([0:total_slot/9:total_slot]);
+    set(gca, 'Xticks', [0:total_slot/9:total_slot]);
+%     xticklabels([0:total_slot/90:total_slot/10]);
+    set(gca, 'XticksLabels', [0:total_slot/90:total_slot/10]);
     xlabel('时间（小时）','FontSize', 15);
     ylabel('效益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
