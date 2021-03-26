@@ -3,35 +3,34 @@ function main()
     bw_step = 0.01;
     price_step = 0.01;
     global repu; repu = 10;
-    global MAX_ITER; MAX_ITER = 600;
-    global MAX_EPOCH; MAX_EPOCH = 200;
+    global MAX_ITER; MAX_ITER = 200;
     global CAPACITY; CAPACITY = 10;
     global NUMBERS; NUMBERS = 3;
-    global will; will = [1, 2, 3];
-    global qos; qos = [1, 1, 1];
+    global will; will = [1, 1.5, 2];
+    global qos; qos = [1, 2, 3];
     global BW; BW = [0, 0, 0];
     global PRICE; PRICE = [0.1, 0.1, 0.0];
-    global OPTIMAL_REVENUE_History; OPTIMAL_REVENUE_History = zeros(1, MAX_ITER);
+    global xrange; xrange = 3*MAX_ITER;
+    global OPTIMAL_REVENUE_History; OPTIMAL_REVENUE_History = zeros(1, xrange);
     cal_optimal_revenue_history();
-    REVENUE_History = zeros(1, MAX_ITER);
-    UTILITY_History = zeros(NUMBERS, MAX_ITER);
-    UTILITY_Epoch_History = zeros(NUMBERS, MAX_ITER);
-    PRICE_History = zeros(NUMBERS, MAX_ITER);
-    BW_History = zeros(NUMBERS, MAX_ITER);
-    for time=1:MAX_ITER
+    REVENUE_History = zeros(1, xrange);
+    UTILITY_History = zeros(NUMBERS, xrange);
+    UTILITY_Epoch_History = zeros(NUMBERS, xrange);
+    PRICE_History = zeros(NUMBERS, xrange);
+    BW_History = zeros(NUMBERS, xrange);
+    for time=1:xrange
         fprintf('-------------------%3d round----------------\n',time);
-        revenue = 0;
         % 1. ISP更新定价策略
         for i=1:NUMBERS
             % 第三个用户前200轮迭代不参与，第200轮预测价格，后400轮迭代不参与
             if i == 3
-                if time < 200
+                if time < MAX_ITER
                     continue
-                elseif time == 200
+                elseif time == MAX_ITER
                     PRICE(i) = mean(PRICE(1:2));
                     fprintf('预测价格为%f\n', PRICE(i));
                     continue;
-                elseif time >= 400
+                elseif time >= 2*MAX_ITER
                     PRICE(i) = 0;
                     continue;
                 end
@@ -39,46 +38,38 @@ function main()
             fprintf('总带宽为%f\n', sum(BW));
             PRICE(i) = max(0, PRICE(i) + price_step*cal_change_rate_p(i));
         end
-        % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
+        for k=1:MAX_ITER
+            %fprintf('-------%3d epoch----------\n',k);
+            % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
+            for i=1:NUMBERS
+                % 第三个用户前200轮迭代不参与，后400轮迭代不参与
+                if i == 3
+                    if time < MAX_ITER
+                        continue
+                    elseif time >= 2*MAX_ITER
+                        BW(i) = 0;
+                        continue;
+                    end
+                end
+                new_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
+                BW(i) = new_bw;
+                new_utility = cal_utility(i, new_bw, PRICE(i));
+                UTILITY_History(i, time) = new_utility;
+                fprintf('bw = %f, price = %f, utility = %f\n' ,BW(i), PRICE(i), new_utility);
+            end
+        end
+        revenue = 0;
         for i=1:NUMBERS
-            % 第三个用户前200轮迭代不参与，后400轮迭代不参与
-            if i == 3 
-                if time < 200
-                    continue
-                elseif time >= 400
-                    BW(i) = 0;
-                    continue;
-                end
-            end
-            utility = cal_utility(i, BW(i), PRICE(i));
-            next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-            next_utility = cal_utility(i, next_bw, PRICE(i));
-            for k=1:MAX_EPOCH
-                %fprintf('-------%3d epoch----------\n',k);
-                BW(i) = next_bw;
-                if time == 1
-                    UTILITY_Epoch_History(i, k) = utility;
-                end
-                utility = next_utility;
-                next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-                next_utility = cal_utility(i, next_bw, PRICE(i));
-                % fprintf('user = %d, bw = %f, utility = %f\n', i, BW(i), utility);
-                k = k + 1;
-            end
             revenue = revenue + cal_revenue(BW(i), PRICE(i));
-            fprintf('bw = %f, price = %f\n' ,BW(i), PRICE(i));
-            UTILITY_History(i, time) = utility;
             BW_History(i, time) = BW(i);
+            PRICE_History(i, time) = PRICE(i);
         end
         fprintf('network revenue = %f\n' , revenue);
         REVENUE_History(time) = revenue;
-        PRICE_History(1, time) = PRICE(1);
-        PRICE_History(2, time) = PRICE(2);
-        PRICE_History(3, time) = PRICE(3);
     end
 	fprintf('----------ENDING-----------\n');
-    x = [1:MAX_ITER];
-    m = [1:20:MAX_ITER];
+    x = [1:xrange];
+    m = [1:20:xrange];
     % MarkerIndices became available in R2016b version.
     % The workaround is plotting two times:
     figure;
@@ -93,19 +84,20 @@ function main()
     figure;
     plot_theoretical_revenue_dynamic(x, m, REVENUE_History);
     savefig('plot_theoretical_revenue_dynamic');
-    
     fprintf('optimal_revenue1 = %f\n', OPTIMAL_REVENUE_History(1));
     fprintf('optimal_revenue2 = %f\n', OPTIMAL_REVENUE_History(201));
 end
 
 function plot_price_dynamic(x, m, PRICE_History)
-    global MAX_ITER;
-    plot_pb = plot(x, PRICE_History(1, 1:MAX_ITER), 'g-', ...,
-        x, PRICE_History(2, 1:MAX_ITER), 'k-', x, PRICE_History(3, 1:MAX_ITER), 'b-');
+    global xrange;
+    plot_pb = plot(x, PRICE_History(1, 1:xrange), 'g-', ...,
+        x, PRICE_History(2, 1:xrange), 'k-', x, ...,
+        PRICE_History(3, 1:xrange), 'b-', 'LineWidth', 1.5);
     hold on;
     plot_p_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
-        x(m), PRICE_History(2, m), 'kx',  x(m), PRICE_History(3, m), 'bp');
-    legend(plot_p_markers, {'ISP对用户1定价策略', 'ISP对用户2定价策略', 'ISP对用户3定价策略'}, 'Location', 'northwest', 'FontSize', 10);
+        x(m), PRICE_History(2, m), 'kx',  ...,
+        x(m), PRICE_History(3, m), 'bp', 'MarkerSize',10);
+    legend(plot_p_markers, {'ISP对用户1定价策略', 'ISP对用户2定价策略', 'ISP对用户3定价策略'}, 'Location', 'northwest', 'FontSize', 15);
     ylim([0 4]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('价格','FontSize', 15);
@@ -113,26 +105,32 @@ function plot_price_dynamic(x, m, PRICE_History)
 end
 
 function plot_bw_dynamic(x, m, BW_History)
-    global MAX_ITER;
-    plot_pb = plot(x, BW_History(1, 1:MAX_ITER), 'r-', x, BW_History(2, 1:MAX_ITER), 'c-', ...,
-        x, BW_History(3, 1:MAX_ITER), 'm-');
+    global xrange;
+    plot_pb = plot(x, BW_History(1, 1:xrange), 'r-', ...,
+        x, BW_History(2, 1:xrange), 'c-', ...,
+        x, BW_History(3, 1:xrange), 'm-', 'LineWidth', 1.5);
     hold on;
-    plot_pb_markers = plot(x(m), BW_History(1, m), 'rd', x(m), BW_History(2, m), 'c+', x(m), BW_History(3, m), 'ms');
-    legend(plot_pb_markers, {'用户1带宽策略', '用户2带宽策略', '用户3带宽策略'}, 'Location', 'northeast', 'FontSize', 10);
+    plot_pb_markers = plot(x(m), BW_History(1, m), 'rd', ...,
+        x(m), BW_History(2, m), 'c+', ...,
+        x(m), BW_History(3, m), 'ms', 'MarkerSize',10);
+    legend(plot_pb_markers, {'用户1带宽策略', '用户2带宽策略', '用户3带宽策略'}, 'Location', 'northeast', 'FontSize', 15);
     xlabel('迭代次数','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_utility_dynamic(x, m, REVENUE_History, UTILITY_History)
-    global MAX_ITER;
-    plot_revenue = plot(x, REVENUE_History, 'r-', x, UTILITY_History(1, 1:MAX_ITER), ...,
-        'g-', x, UTILITY_History(2, 1:MAX_ITER), 'b-', x, UTILITY_History(3, 1:MAX_ITER), 'c-');
+    global xrange;
+    plot_revenue = plot(x, REVENUE_History, 'r-', ...,
+        x, UTILITY_History(1, 1:xrange), 'g-', ...,
+        x, UTILITY_History(2, 1:xrange), 'b-', ...,
+        x, UTILITY_History(3, 1:xrange), 'c-', 'LineWidth', 1.5);
     hold on;
     plot_revenue_makers = plot(x(m), REVENUE_History(m), 'rd', ...,
-        x(m), UTILITY_History(1, m), 'g*', x(m), UTILITY_History(2, m), 'bx', ...,
-        x(m), UTILITY_History(3, m), 'cp');
-    legend(plot_revenue_makers, {'ISP收益函数', '用户1效用函数', '用户2效用函数', '用户3效用函数'},'FontSize', 10);
+        x(m), UTILITY_History(1, m), 'g*', ...,
+        x(m), UTILITY_History(2, m), 'bx', ...,
+        x(m), UTILITY_History(3, m), 'cp', 'MarkerSize',10);
+    legend(plot_revenue_makers, {'ISP收益函数', '用户1效用函数', '用户2效用函数', '用户3效用函数'},'FontSize', 15);
     ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('效益','FontSize', 15);
@@ -141,11 +139,13 @@ end
 
 function plot_theoretical_revenue_dynamic(x, m, REVENUE_History)
     global OPTIMAL_REVENUE_History;
-    global MAX_ITER;
-    plot_revenue = plot(x, OPTIMAL_REVENUE_History, 'k-', x, REVENUE_History, 'r-');
+    global xrange;
+    plot_revenue = plot(x, OPTIMAL_REVENUE_History, 'k-', ...,
+        x, REVENUE_History, 'r-', 'LineWidth', 1.5);
     hold on;
-    plot_revenue_makers = plot(x(m), OPTIMAL_REVENUE_History(m), 'k*', x(m), REVENUE_History(m), 'rd');
-    legend(plot_revenue_makers, {'ISP理论收益', 'ISP实际收益'},'FontSize', 10);
+    plot_revenue_makers = plot(x(m), OPTIMAL_REVENUE_History(m), 'k*', ...,
+        x(m), REVENUE_History(m), 'rd', 'MarkerSize',10);
+    legend(plot_revenue_makers, {'ISP理论收益', 'ISP实际收益'},'FontSize', 15);
     ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('收益','FontSize', 15);
@@ -153,6 +153,7 @@ function plot_theoretical_revenue_dynamic(x, m, REVENUE_History)
 end
 
 function cal_optimal_revenue_history()
+    global MAX_ITER;
     global will;
     global qos;
     global repu;
@@ -176,9 +177,9 @@ function cal_optimal_revenue_history()
             revenue2 = revenue;
         end
     end
-    OPTIMAL_REVENUE_History(1:200) = revenue1;
-    OPTIMAL_REVENUE_History(201:400) = revenue2;
-    OPTIMAL_REVENUE_History(401:600) = revenue1;
+    OPTIMAL_REVENUE_History(1:MAX_ITER) = revenue1;
+    OPTIMAL_REVENUE_History(MAX_ITER+1:2*MAX_ITER) = revenue2;
+    OPTIMAL_REVENUE_History(2*MAX_ITER+1:3*MAX_ITER) = revenue1;
 end
 
 function util=cal_utility(i, b, p)
