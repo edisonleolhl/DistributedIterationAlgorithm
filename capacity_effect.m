@@ -6,11 +6,17 @@ function main()
     global CAPACITY; CAPACITY = 10;
     global MAX_ITER; MAX_ITER = 500; % capacity的最大迭代次数
     global MAX_EPOCH; MAX_EPOCH = 500; % 用户最大迭代次数
-    global NUMBERS; NUMBERS = 4;
     global will; will = [1, 2, 1, 2]; % 用户购买意愿
     global qos; qos = [1, 1, 5, 5]; % 1~5，用户对QoS的需求
+    global NUMBERS; NUMBERS = length(will);
     global BW; BW = zeros(1, NUMBERS); % 两个用户，初始带宽均为0
     global PRICE; PRICE = 0.1 * ones(1, NUMBERS); % 网络j的初始价格，对于用户1和2而言
+    global earth; global purple; global deep_green; global ocean_blue; global grey_earth;
+    earth = [204/255, 102/255, 0];
+    purple = [102/255, 0, 204/255];
+    deep_green = [0, 102/255, 0];
+    ocean_blue = [0, 102/255, 204/255];
+    grey_earth = [153/255, 153/255, 102/255];
     c_list = [10:30];
     c_num = length(c_list);
     REVENUE_History = zeros(1, c_num); % ISP收益随C的变化
@@ -22,27 +28,23 @@ function main()
         fprintf('-------------------capacity=%3d----------------\n',c);
         for time=1:MAX_ITER
 %             fprintf('-------------------%3d round----------------\n',time);
-            revenue = 0;
             % 1. ISP更新定价策略
-            for i=1:length(BW)
+            for i=1:NUMBERS
                 PRICE(i) = max(0, PRICE(i) + price_step*cal_change_rate_p(i));
             end
-            % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
-            for i=1:length(BW)
-                utility = cal_utility(i, BW(i), PRICE(i));
-                next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-                next_utility = cal_utility(i, next_bw, PRICE(i));
-                for k=1:MAX_EPOCH
-                    %fprintf('-------%3d epoch----------\n',k);
-                    BW(i) = next_bw;
-                    utility = next_utility;
-                    next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-                    next_utility = cal_utility(i, next_bw, PRICE(i));
-                    % fprintf('user = %d, bw = %f, utility = %f\n', i, BW(i), utility);
-                    k = k + 1;
+            for k=1:MAX_EPOCH
+                %fprintf('-------%3d epoch----------\n',k);
+                % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
+                for i=1:NUMBERS
+                    new_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
+                    BW(i) = new_bw;
                 end
-                revenue = revenue + cal_revenue(BW(i), PRICE(i));
             end
+        end
+        revenue = 0;
+        for i=1:NUMBERS
+            revenue = revenue + cal_revenue(BW(i), PRICE(i));
+            fprintf('user = %d, bw = %f, price= %f\n', i, BW(i), PRICE(i));
         end
         fprintf('network revenue = %f\n' , revenue);
         % 记录数据
@@ -74,47 +76,62 @@ function main()
 end
 
 function plot_diff_capacity_effect_on_price(c_list, c_num, PRICE_History)
-    plot_p = plot(c_list, PRICE_History(1, 1:c_num), 'b-*', ...,
-        c_list, PRICE_History(2, 1:c_num), 'r-p', ...,
-        c_list, PRICE_History(3, 1:c_num), 'c-d', ...,
-        c_list, PRICE_History(4, 1:c_num), 'm->');
+    global earth; global purple; global deep_green; global ocean_blue; global grey_earth;
+    plot_p = plot(c_list, PRICE_History(1, 1:c_num), '-*', ..., 
+        'color', deep_green, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p1 = plot(c_list, PRICE_History(2, 1:c_num), '-p', ...,
+        'color', ocean_blue, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p2 = plot(c_list, PRICE_History(3, 1:c_num), '-d', ...,
+        'color', earth, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p3 = plot(c_list, PRICE_History(4, 1:c_num), '->', ...,
+        'color', purple, 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'ISP对用户1(w=1,q=1)定价策略', 'ISP对用户2(w=2,q=1)定价策略', ...,
         'ISP对用户3(w=1,q=5)定价策略', 'ISP对用户4(w=2,q=5)定价策略'}, ...,
-        'Location', 'northeast', 'FontSize', 10);
+        'Location', 'northeast', 'FontSize', 15);
     xlabel('网络容量(Capacity)','FontSize', 15);
     ylabel('价格','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_diff_capacity_effect_on_bw(c_list, c_num, BW_History)
-    plot_bw = plot(c_list, BW_History(1, 1:c_num), 'b-*', ...,
-        c_list, BW_History(2, 1:c_num), 'r-p', ...,
-        c_list, BW_History(3, 1:c_num), 'c-d', ...,
-        c_list, BW_History(4, 1:c_num), 'm->');
+    global earth; global purple; global deep_green; global ocean_blue; global grey_earth;
+    plot_p = plot(c_list, BW_History(1, 1:c_num), '-*', ..., 
+        'color', deep_green, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p1 = plot(c_list, BW_History(2, 1:c_num), '-p', ...,
+        'color', ocean_blue, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p2 = plot(c_list, BW_History(3, 1:c_num), '-d', ...,
+        'color', earth, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p3 = plot(c_list, BW_History(4, 1:c_num), '->', ...,
+        'color', purple, 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'用户1(w=1,q=1)带宽策略', '用户2(w=2,q=1)带宽策略', ...,
         '用户3(w=1,q=5)带宽策略', '用户4(w=2,q=5)带宽策略'}, ...,
-        'Location', 'northwest', 'FontSize', 10);
+        'Location', 'northwest', 'FontSize', 15);
     xlabel('网络容量(Capacity)','FontSize', 15);
     ylabel('带宽','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_diff_capacity_effect_on_utility(c_list, c_num, UTILITY_History)
-    plot_p = plot(c_list, UTILITY_History(1, 1:c_num), 'b-*', ...,
-        c_list, UTILITY_History(2, 1:c_num), 'r-p', ...,
-        c_list, UTILITY_History(3, 1:c_num), 'c-d', ...,
-        c_list, UTILITY_History(4, 1:c_num), 'm->');
+    global earth; global purple; global deep_green; global ocean_blue; global grey_earth;
+    plot_p = plot(c_list, UTILITY_History(1, 1:c_num), '-*', ..., 
+        'color', deep_green, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p1 = plot(c_list, UTILITY_History(2, 1:c_num), '-p', ...,
+        'color', ocean_blue, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p2 = plot(c_list, UTILITY_History(3, 1:c_num), '-d', ...,
+        'color', earth, 'LineWidth', 1.5, 'MarkerSize',10); hold on;
+    plot_p3 = plot(c_list, UTILITY_History(4, 1:c_num), '->', ...,
+        'color', purple, 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'用户1(w=1,q=1)效用', '用户2(w=2,q=1)效用', ...,
-        '用户3(w=1,q=5）效用', '用户4(w=2,q=5)效用'}, ...,
-        'Location', 'northwest', 'FontSize', 10);
+        '用户3(w=1,q=5效用', '用户4(w=2,q=5)效用'}, ...,
+        'Location', 'northwest', 'FontSize', 15);
     xlabel('网络容量(Capacity)','FontSize', 15);
-    ylabel('价格','FontSize', 15);
+    ylabel('效用','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
 function plot_diff_capacity_effect_on_revenue(c_list, c_num, REVENUE_History)
-    plot_revenue = plot(c_list, REVENUE_History, 'r-*');
-    legend({'ISP收益'},'Location', 'northwest','FontSize', 10);
+    plot_revenue = plot(c_list, REVENUE_History, 'r-*', 'LineWidth', 1.5, 'MarkerSize',10);
+    legend({'ISP收益'},'Location', 'northwest','FontSize', 15);
     xlabel('网络容量(Capacity)','FontSize', 15);
     ylabel('收益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');

@@ -17,6 +17,7 @@ function main()
     UTILITY_Epoch_History = zeros(NUMBERS, MAX_ITER);
     PRICE_History = zeros(NUMBERS, MAX_ITER);
     BW_History = zeros(NUMBERS, MAX_ITER);
+    prev_rev = 0;
     for time=1:2*MAX_ITER
         fprintf('-------------------%3d round----------------\n',time);
         revenue = 0;
@@ -40,7 +41,6 @@ function main()
                 next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
                 next_utility = cal_utility(i, next_bw, PRICE(i));
                 % fprintf('user = %d, bw = %f, utility = %f\n', i, BW(i), utility);
-                k = k + 1;
             end
             revenue = revenue + cal_revenue(BW(i), PRICE(i));
             fprintf('bw = %f, price = %f\n' ,BW(i), PRICE(i));
@@ -51,6 +51,10 @@ function main()
             end
         end
         fprintf('network revenue = %f\n' , revenue);
+        if abs(prev_rev - revenue) < 0.001 * prev_rev
+            break;
+        end
+        prev_rev = revenue;
         if time <= MAX_ITER
             REVENUE_History(time) = revenue;           
         else
@@ -71,14 +75,14 @@ function main()
     figure;
     % MarkerIndices became available in R2016b version.
     % The workaround is plotting two times:
-    plot_utility_epoch(x, m, UTILITY_Epoch_History(1:NUMBERS, 1:MAX_ITER));
-    savefig('plot_utility_epoch');
-    figure;
+%     plot_utility_epoch(x, m, UTILITY_Epoch_History(1:NUMBERS, 1:MAX_ITER));
+%     savefig('plot_utility_epoch');
+%     figure;
     plot_utility(x, m, REVENUE_History, UTILITY_History);
-    savefig('plot_utility');
-    figure;
-    plot_pb(x, m, PRICE_History, BW_History);
-    savefig('plot_pb');
+%     savefig('plot_utility');
+%     figure;
+%     plot_pb(x, m, PRICE_History, BW_History);
+%     savefig('plot_pb');
 end
 
 function plot_pb(x, m, PRICE_History, BW_History)

@@ -45,32 +45,33 @@ function main()
                 end
             end
             new_wills = round(rand(1, num), 1) + 1; % will=[1,2]
-            new_qoss = round(rand(1, num), 1) + 1; % qos=[1,2]
+            new_qoss = ones(1,num);%round(rand(1, num), 1) + 1; % qos=[1,2]
             % 加入到时间槽历史中
             will_valley(time+1, 1 : num) = new_wills; %matlab下标从1开始
             qos_valley(time+1, 1 : num) = new_qoss;
-            if find(UBP_new_pricing_slot == time)
-                % UBP重新决定price
-                ubp_price = UBP(new_wills, new_qoss);
-            end
-            fprintf('UBP ubp_price = %f\n' , ubp_price);
-            bws = user_epoch(new_wills, new_qoss, ubp_price);
-            revenue_UBP = ubp_price*sum(bws);
-            REVENUE_UBP_History(time+1) = revenue_UBP;
-            fprintf('UBP network revenue = %f\n' , revenue_UBP);
-            utilitys = zeros(1, num);
-            for i=1:num
-                utilitys(i) = cal_utility(i, new_wills, new_qoss, bws(i), ubp_price);
-            end
-            utility_UBP = mean(utilitys);
-            UTILITY_UBP_History(time+1) = utility_UBP;
-            fprintf('UBP avg user utility = %f\n' , utility_UBP);
+%             if find(UBP_new_pricing_slot == time)
+%                 % UBP重新决定price
+%                 ubp_price = UBP(new_wills, new_qoss);
+%             end
+%             fprintf('UBP ubp_price = %f\n' , ubp_price);
+%             bws = user_epoch(new_wills, new_qoss, ubp_price);
+%             revenue_UBP = ubp_price*sum(bws);
+%             REVENUE_UBP_History(time+1) = revenue_UBP;
+%             fprintf('UBP network revenue = %f\n' , revenue_UBP);
+%             utilitys = zeros(1, num);
+%             for i=1:num
+%                 utilitys(i) = cal_utility(i, new_wills, new_qoss, bws(i), ubp_price);
+%             end
+%             utility_UBP = mean(utilitys);
+%             UTILITY_UBP_History(time+1) = utility_UBP;
+%             fprintf('UBP avg user utility = %f\n' , utility_UBP);
             % DIP
             [revenue_DIA, utility_DIA] = DIP(new_wills, new_qoss);
             REVENUE_DIA_History(time+1) = revenue_DIA;
             fprintf('DIP network revenue = %f\n' , revenue_DIA);
             UTILITY_DIA_History(time+1) = utility_DIA;
             fprintf('DIP avg user utility = %f\n' , utility_DIA);
+            fprintf('theoritical revenue = %f\n', theo(num, new_wills, new_qoss));
         end
         now_str = datestr(now,30);
         if type == 'v'
@@ -250,4 +251,19 @@ function rp=cal_change_rate_p_UBP(bws)
     if sum(bws) < CAPACITY / 5
         rp = -abs(rp);
     end
+end
+
+function r=theo(num, wills, qoss)
+    global REPUTATION;
+    global CAPACITY;
+    r = 0;
+    temp1 = 0;
+    for i=1:num
+        temp1 = temp1 + (REPUTATION*qoss(i)) ^ (-1);
+    end
+    temp2 = 0;
+    for i=1:num
+        temp2 = temp2 + (REPUTATION*qoss(i)) ^ (-1) * wills(i);
+    end
+    r = sum(wills(1:num)) - num * temp2 / (CAPACITY+temp1);  
 end
