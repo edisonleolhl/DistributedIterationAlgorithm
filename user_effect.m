@@ -35,34 +35,31 @@ function main(type)
             qos = x*ones(1, NUMBERS); % for qos
         end
         for time=1:MAX_ITER
-            % fprintf('-------------------%3d round----------------\n',time);
-            revenue = 0;
+%             fprintf('-------------------%3d round----------------\n',time);
             % 1. ISP更新定价策略
             for i=1:NUMBERS
                 PRICE(i) = max(0, PRICE(i) + price_step*cal_change_rate_p(i));
             end
-            % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
-            for i=1:NUMBERS
-                utility = cal_utility(i, BW(i), PRICE(i));
-                next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-                next_utility = cal_utility(i, next_bw, PRICE(i));
-                for k=1:MAX_ITER
-                    %fprintf('-------%3d epoch----------\n',k);
-                    BW(i) = next_bw;
-                    utility = next_utility;
-                    next_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
-                    next_utility = cal_utility(i, next_bw, PRICE(i));
-                    k = k + 1;
+            for k=1:MAX_ITER
+                %fprintf('-------%3d epoch----------\n',k);
+                % 2. 单个用户通过迭代调节自己的带宽策略，直到自己的效用函数达到最大值，因为效用函数是凹函数，所以肯定会收敛
+                for i=1:NUMBERS
+                    new_bw = max(0, BW(i) + bw_step*cal_change_rate_b(i));
+                    BW(i) = new_bw;
                 end
-                revenue = revenue + cal_revenue(BW(i), PRICE(i));
             end
+        end
+        revenue = 0;
+        for i=1:NUMBERS
+            revenue = revenue + cal_revenue(BW(i), PRICE(i));
+            fprintf('user = %d, bw = %f, price= %f\n', i, BW(i), PRICE(i));
         end
         avg_price = mean(PRICE(1:NUMBERS));
         avg_bw = mean(BW(1:NUMBERS));
         avg_utility = cal_utility(1, avg_bw, avg_price); % w与q都相同，所以i=1即可
         fprintf('avg_bw = %f, avg_price = %f\n' , avg_bw, avg_price);
-        fprintf('avg_utility = %f\n' , avg_utility);
-        fprintf('network revenue = %f\n' , revenue);
+        fprintf('avg_bw = %f, avg_price = %f\n' , avg_bw, avg_price);
+        fprintf('avg_utility = %f, network revenue = %f\n' , avg_utility, revenue);
         if type == 'w'
             avg_price_trends(round(x*10-9)) = avg_price;
             avg_bw_trends(round(x*10-9)) = avg_bw;
@@ -84,9 +81,9 @@ end
 
 function plot_effect_on_pb(type, x, avg_price_trends, avg_bw_trends)
     yyaxis left
-    plot(x, avg_price_trends, 'b-p');
+    plot(x, avg_price_trends, 'b-p', 'LineWidth', 1.5, 'MarkerSize',10);
     yyaxis right
-    plot(x, avg_bw_trends, 'r-*');
+    plot(x, avg_bw_trends, 'r-*', 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'ISP平均定价策略', '用户平均带宽策略'}, ...,
         'FontSize', 15, 'Location', 'northwest');
     yyaxis left
@@ -113,9 +110,9 @@ end
 
 function plot_effect_on_ru(type, x, revenue_trends, avg_utility_trends)
     yyaxis left
-    plot(x, avg_utility_trends, 'b-p');
+    plot(x, avg_utility_trends, 'b-p', 'LineWidth', 1.5, 'MarkerSize',10);
     yyaxis right
-    plot(x, revenue_trends, 'r-*');
+    plot(x, revenue_trends, 'r-*', 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'用户平均效用', 'ISP收益'},'FontSize', 15, 'Location', 'northwest');
     yyaxis left
     ylabel('效用','FontSize', 15);
