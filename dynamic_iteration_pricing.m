@@ -145,7 +145,7 @@ function plot_theoretical_revenue_dynamic(x, m, REVENUE_History)
     hold on;
     plot_revenue_makers = plot(x(m), OPTIMAL_REVENUE_History(m), 'k*', ...,
         x(m), REVENUE_History(m), 'rd', 'MarkerSize',10);
-    legend(plot_revenue_makers, {'ISP理论收益', 'ISP实际收益'},'FontSize', 15);
+    legend(plot_revenue_makers, {'逆向归纳法-ISP理论最大收益', '分布式迭代-ISP实际收益'},'FontSize', 15);
     ylim([0 10]);
     xlabel('迭代次数','FontSize', 15);
     ylabel('收益','FontSize', 15);
