@@ -4,8 +4,8 @@ function main()
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 10;
-    global MAX_ITER; MAX_ITER = 500; % capacity的最大迭代次数
-    global MAX_EPOCH; MAX_EPOCH = 500; % 用户最大迭代次数
+    global MAX_ITER; MAX_ITER = 400; % capacity的最大迭代次数
+    global MAX_EPOCH; MAX_EPOCH = 400; % 用户最大迭代次数
     global will; will = [1, 2, 1, 2]; % 用户购买意愿
     global qos; qos = [1, 1, 5, 5]; % 1~5，用户对QoS的需求
     global NUMBERS; NUMBERS = length(will);
@@ -122,7 +122,7 @@ function plot_diff_capacity_effect_on_utility(c_list, c_num, UTILITY_History)
     plot_p3 = plot(c_list, UTILITY_History(4, 1:c_num), '->', ...,
         'color', purple, 'LineWidth', 1.5, 'MarkerSize',10);
     legend({'用户1(w=1,q=1)效用', '用户2(w=2,q=1)效用', ...,
-        '用户3(w=1,q=5效用', '用户4(w=2,q=5)效用'}, ...,
+        '用户3(w=1,q=5)效用', '用户4(w=2,q=5)效用'}, ...,
         'Location', 'northwest', 'FontSize', 15);
     xlabel('网络容量(Capacity)','FontSize', 15);
     ylabel('效用','FontSize', 15);

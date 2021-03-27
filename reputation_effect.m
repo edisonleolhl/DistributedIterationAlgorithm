@@ -4,8 +4,8 @@ function main()
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 20;
-    global MAX_ITER; MAX_ITER = 500;
-    global MAX_EPOCH; MAX_EPOCH = 500; % 用户最大迭代次数
+    global MAX_ITER; MAX_ITER = 200;
+    global MAX_EPOCH; MAX_EPOCH = 200; % 用户最大迭代次数
     global will; will = [1, 1.25, 1.5, 1.75, 2]; % 用户购买意愿
     global qos; qos = [1, 1, 1, 1, 1]; % 1~5，用户对QoS的需求
     global NUMBERS; NUMBERS = length(will);
@@ -140,7 +140,7 @@ end
 
 function plot_diff_repu_effect_on_revenue(r_list, r_num, REVENUE_History)
     plot_revenue = plot(r_list, REVENUE_History, 'r-*', 'LineWidth', 1.5, 'MarkerSize',10);
-    legend({'ISP收益'},'Location', 'northwest','FontSize', 10);
+    legend({'ISP收益'},'Location', 'northwest','FontSize', 15);
     xlabel('网络质量(Reputation))','FontSize', 15);
     ylabel('收益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
