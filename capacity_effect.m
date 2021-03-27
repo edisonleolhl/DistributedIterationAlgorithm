@@ -4,8 +4,8 @@ function main()
     price_step = 0.01;
     global repu; repu = 10; % 1~10，网络j的QoS指标
     global CAPACITY; CAPACITY = 10;
-    global MAX_ITER; MAX_ITER = 400; % capacity的最大迭代次数
-    global MAX_EPOCH; MAX_EPOCH = 400; % 用户最大迭代次数
+    global MAX_ITER; MAX_ITER = 200; % capacity的最大迭代次数
+    global MAX_EPOCH; MAX_EPOCH = 200; % 用户最大迭代次数
     global will; will = [1, 2, 1, 2]; % 用户购买意愿
     global qos; qos = [1, 1, 5, 5]; % 1~5，用户对QoS的需求
     global NUMBERS; NUMBERS = length(will);
@@ -17,7 +17,7 @@ function main()
     deep_green = [0, 102/255, 0];
     ocean_blue = [0, 102/255, 204/255];
     grey_earth = [153/255, 153/255, 102/255];
-    c_list = [10:30];
+    c_list = [15:25];
     c_num = length(c_list);
     REVENUE_History = zeros(1, c_num); % ISP收益随C的变化
     UTILITY_History = zeros(NUMBERS, c_num); % 各用户效用随C的变化
@@ -48,11 +48,11 @@ function main()
         end
         fprintf('network revenue = %f\n' , revenue);
         % 记录数据
-        REVENUE_History(c-9) = revenue;
+        REVENUE_History(c-14) = revenue;
         for i=1:NUMBERS
-            UTILITY_History(i, c-9) = cal_utility(i, BW(i), PRICE(i));
-            PRICE_History(i, c-9) = PRICE(i);
-            BW_History(i, c-9) = BW(i);
+            UTILITY_History(i, c-14) = cal_utility(i, BW(i), PRICE(i));
+            PRICE_History(i, c-14) = PRICE(i);
+            BW_History(i, c-14) = BW(i);
         end
         % 回归初始条件
         BW = zeros(1, NUMBERS);
