@@ -8,16 +8,17 @@ function main()
     global price_step; price_step = 0.01;
     global MAX_ITER; MAX_ITER = 400; %TODO
     global MAX_EPOCH; MAX_EPOCH = 400;
-    time_slot = 1; % 时间槽为0.1h，为了便于仿真，放大十倍
+    time_slot = 0.1; % 时间槽为0.1h，为了便于仿真，放大十倍
     period_total_slot = 8 / time_slot; %一个时间段总共有80个时间槽
     peak = 400; % 流量高峰期，平均每小时400条流
     mid = 200;
     valley = 100;
     will_valley = zeros(period_total_slot, valley / 10);
     qos_valley = zeros(period_total_slot, valley / 10);
-    days = 1; %三天
+    days = 3; %三天
     total_slot = 3*days*period_total_slot;
     for type=['v']
+        CAPACITY = 100;
         REVENUE_UBP_History = zeros(1, total_slot);
         REVENUE_DIP_History = zeros(1, total_slot);
         UTILITY_UBP_History = zeros(1, total_slot);
@@ -78,19 +79,21 @@ function main()
         now_str = datestr(now,30);
         if type == 'v'
             mat_file = strcat(strcat('algorithm_comparison_capacity_varied_', now_str), '.mat');
-%             save(mat_file,'REVENUE_UBP_History','revenue_DIP_History','UTILITY_UBP_History','UTILITY_DIP_History');
+            save(mat_file,'REVENUE_UBP_History','REVENUE_DIP_History','UTILITY_UBP_History','UTILITY_DIP_History');
+            mat_theo_file = strcat(strcat('algorithm_theo_capacity_varied_', now_str), '.mat');
+            save(mat_theo_file,'THEO_REVENUE');
             figure;
-            plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History, THEO_REVENUE);
-%             savefig(strcat('plot_revenue_comparison_capacity_varied_', now_str));
+            plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History);
+            savefig(strcat('plot_revenue_comparison_capacity_varied_', now_str));
 %             figure;
 %             plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIP_History);
 %             savefig(strcat('plot_utility_comparison_capacity_varied_', now_str));
         else
             mat_file = strcat(strcat('algorithm_comparison_capacity_fixed_', now_str), '.mat');
-%             save(mat_file,'REVENUE_UBP_History','REVENUE_DIP_History','UTILITY_UBP_History','UTILITY_DIP_History');
+            save(mat_file,'REVENUE_UBP_History','REVENUE_DIP_History','UTILITY_UBP_History','UTILITY_DIP_History');
             figure;
-            plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History, THEO_REVENUE);
-%             savefig(strcat('plot_revenue_comparison_capacity_fixed_', now_str));
+            plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History);
+            savefig(strcat('plot_revenue_comparison_capacity_fixed_', now_str));
 %             figure;
 %             plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIP_History);
 %             savefig(strcat('plot_utility_comparison_capacity_fixed_', now_str));
@@ -98,38 +101,38 @@ function main()
     end
 end
 
-function plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History, THEO_REVENUE)
+function plot_revenue_comparison(total_slot, REVENUE_UBP_History, REVENUE_DIP_History)
     x = [1:total_slot];
     m = [1:2:total_slot];
     plot(x(m), REVENUE_UBP_History(m), 'b-', ...,
-        x(m), REVENUE_DIP_History(m), 'r-', ...,
-        x(m), THEO_REVENUE(m), 'k-.');
-    legend({'UBP-ISP收益', 'DIP-ISP收益', '逆向归纳-ISP理论最大收益'}, 'Location', 'northwest', 'FontSize', 15);
-%     xticks([0:total_slot/9:total_slot]); % only available after
-%     R2016b(included)
-    set(gca, 'Xticks', [0:total_slot/9:total_slot]);
-%     xticklabels([0:total_slot/90:total_slot/10]);
-    set(gca, 'XticksLabels', [0:total_slot/90:total_slot/10]);
+        x(m), REVENUE_DIP_History(m), 'r-',  'LineWidth', 1);
+    legend({'UBP-ISP收益', 'DIP-ISP收益'}, 'Location', 'northwest', 'FontSize', 15);
+    xticks([0:total_slot/9:total_slot]); % only available after R2016b(included)
+%     set(gca, 'Xticks', [0:total_slot/9:total_slot]);
+    xticklabels([0:total_slot/90:total_slot/10]);
+%     set(gca, 'XticksLabels', [0:total_slot/90:total_slot/10]);
     xlim([0 total_slot]);
+    ylim([0 80]);
     xlabel('时间（小时）','FontSize', 15);
     ylabel('效益','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked');
 end
 
-function plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIP_History)
-    x = [1:total_slot];
-    m = [1:2:total_slot];
-    plot(x(m), UTILITY_UBP_History(m), 'b-', ...,
-        x(m), UTILITY_DIP_History(m), 'r-');
-    legend({'UBP-用户平均效益', 'DIP-用户平均效益'}, 'Location', 'northwest', 'FontSize', 15);
-%     xticks([0:total_slot/9:total_slot]);
-    set(gca, 'Xticks', [0:total_slot/9:total_slot]);
-%     xticklabels([0:total_slot/90:total_slot/10]);
-    set(gca, 'XticksLabels', [0:total_slot/90:total_slot/10]);
-    xlabel('时间（小时）','FontSize', 15);
-    ylabel('效益','FontSize', 15);
-    set(0,'DefaultFigureWindowStyle','docked');
-end
+% --------do not need anymore------
+% function plot_utility_comparison(total_slot, UTILITY_UBP_History, UTILITY_DIP_History)
+%     x = [1:total_slot];
+%     m = [1:2:total_slot];
+%     plot(x(m), UTILITY_UBP_History(m), 'b-', ...,
+%         x(m), UTILITY_DIP_History(m), 'r-');
+%     legend({'UBP-用户平均效益', 'DIP-用户平均效益'}, 'Location', 'northwest', 'FontSize', 15);
+% %     xticks([0:total_slot/9:total_slot]);
+% %     set(gca, 'Xticks', [0:total_slot/9:total_slot]);
+% %     xticklabels([0:total_slot/90:total_slot/10]);
+%     set(gca, 'XticksLabel', [0:total_slot/90:total_slot/10]);
+%     xlabel('时间（小时）','FontSize', 15);
+%     ylabel('效益','FontSize', 15);
+%     set(0,'DefaultFigureWindowStyle','docked');
+% end
 
 function [revenue_DIP, utility_DIP] = DIP(wills, qoss)
     global MAX_ITER;
