@@ -63,10 +63,10 @@ function main()
     m = [1:10:MAX_ITER];
     figure;
     plot_utility_epoch(x, m, UTILITY_Epoch_History(1:NUMBERS, 1:MAX_ITER));
-    savefig('plot_utility_epoch');
+%     savefig('plot_utility_epoch');
     figure;
     plot_utility(x, m, REVENUE_History, UTILITY_History);
-    savefig('plot_utility');
+%     savefig('plot_utility');
     figure;
     plot_pb(x, m, PRICE_History, BW_History);
     savefig('plot_pb');
@@ -88,17 +88,22 @@ end
 
 function plot_pb(x, m, PRICE_History, BW_History)
     global MAX_ITER;
-    plot_pb = plot(x, PRICE_History(1, 1:MAX_ITER), 'g-', ...,
-        x, PRICE_History(2, 1:MAX_ITER), 'b-', ...,
-        x, BW_History(1, 1:MAX_ITER), 'r-', ...,
-        x, BW_History(2, 1:MAX_ITER), 'c-', 'LineWidth', 1.5);
+    gap = 1;
+    yyaxis left
+    plot(x, PRICE_History(1, 1:MAX_ITER), 'k-d', ...,
+        x, PRICE_History(2, 1:MAX_ITER), 'b-o');
+    yyaxis right
+    plot(x, BW_History(1, 1:MAX_ITER), 'r->', ...,
+        x, BW_History(2, 1:MAX_ITER), 'c-*');
     hold on;
-    plot_pb_markers = plot(x(m), PRICE_History(1, m), 'g*', ...,
-            x(m), PRICE_History(2, m), 'bx', ...,
-            x(m), BW_History(1, m), 'rd', ...,
-            x(m), BW_History(2, m), 'cp', 'MarkerSize',10);
-    legend(plot_pb_markers, {'ISP对用户1定价策略', 'ISP对用户2定价策略', ...,
-        '用户1带宽策略', '用户2带宽策略'}, 'Location', 'northeast', 'FontSize', 15);
+    yyaxis left
+    legend({'ISP对用户1定价策略', 'ISP对用户2定价策略', '用户1带宽策略', '用户2带宽策略'}, ...,
+        'FontSize', 15, 'Location', 'northeast');
+    yyaxis left
+    ylabel('价格','FontSize', 15);
+    ylim([0,3]);
+    yyaxis right
+    ylabel('带宽','FontSize', 15);
     xlabel('迭代次数','FontSize', 15);
     set(0,'DefaultFigureWindowStyle','docked')
 end
